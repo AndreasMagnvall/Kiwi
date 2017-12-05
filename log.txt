@@ -1,0 +1,49 @@
+
+-------------------------------------------------------------
+Tue Dec 05 2017 15:31:16 GMT+0100 (Västeuropa, normaltid)
+Discord MathBot is ready!
+
+-------------------------------------------------------------
+Tue Dec 05 2017 15:31:58 GMT+0100 (Västeuropa, normaltid)
+Discord MathBot is ready!
+
+-------------------------------------------------------------
+Tue Dec 05 2017 15:33:01 GMT+0100 (Västeuropa, normaltid)
+Discord MathBot is ready!
+
+-------------------------------------------------------------
+Tue Dec 05 2017 15:33:45 GMT+0100 (Västeuropa, normaltid)
+Discord MathBot is ready!
+
+-------------------------------------------------------------
+Tue Dec 05 2017 15:37:22 GMT+0100 (Västeuropa, normaltid)
+Discord MathBot is ready!
+
+-------------------------------------------------------------
+Tue Dec 05 2017 15:37:44 GMT+0100 (Västeuropa, normaltid)
+Discord MathBot is ready!
+--------
+Tue Dec 05 2017 15:40:07 GMT+0100 (Västeuropa, normaltid)
+User Froadus typed "!solve 144 + 14154" in general.
+Found step-by-step: Result
+Search completed! Found 1 step-by-step solutions!
+
+-------------------------------------------------------------
+Tue Dec 05 2017 16:51:16 GMT+0100 (Västeuropa, normaltid)
+Discord MathBot is ready!
+
+-------------------------------------------------------------
+Tue Dec 05 2017 16:52:05 GMT+0100 (Västeuropa, normaltid)
+Discord MathBot is ready!
+
+-------------------------------------------------------------
+Tue Dec 05 2017 17:49:25 GMT+0100 (Västeuropa, normaltid)
+Discord MathBot is ready!
+
+-------------------------------------------------------------
+Tue Dec 05 2017 17:50:03 GMT+0100 (Västeuropa, normaltid)
+Discord MathBot is ready!
+
+-------------------------------------------------------------
+Tue Dec 05 2017 17:50:40 GMT+0100 (Västeuropa, normaltid)
+Discord MathBot is ready!
