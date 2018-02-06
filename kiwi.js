@@ -1,11 +1,19 @@
-﻿const LOGIN_TOKEN = '';
-const WOLFRAM_ALPHA_APP_ID = '';
-
-
 const fs = require('fs');
 const LOGS = true;
 const DEBUG_LOGS = false;
 const Discord = require('discord.js');
+let tokens;
+if (fs.existsSync('tokens.json')) {
+  tokens = JSON.parse(fs.readFileSync('tokens.json','utf8'));
+} else {
+  console.log("No tokens.json exist, creating one...");
+  let defaultTokenString = "{\n  \"discord_bot_token\" : \"PasteTokenHere\"\,\n  \"wolfram_app_id\" : \"PasteAppIdHere\"\n}";
+  fs.writeFileSync('tokens.json',defaultTokenString);
+  console.log("Edit discord token and wolfram app id in the file tokens.json")
+  process.exit();
+}
+const LOGIN_TOKEN = tokens.discord_bot_token;
+const WOLFRAM_ALPHA_APP_ID = tokens.wolfram_app_id;
 
 const parseXML = require('xml2js').parseString;
 const querystring = require('querystring');
