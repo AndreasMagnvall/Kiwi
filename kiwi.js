@@ -7,13 +7,34 @@ if (fs.existsSync('tokens.json')) {
   tokens = JSON.parse(fs.readFileSync('tokens.json','utf8'));
 } else {
   console.log("No tokens.json exist, creating one...");
-  let defaultTokenString = "{\n  \"discord_bot_token\" : \"PasteTokenHere\"\,\n  \"wolfram_app_id\" : \"PasteAppIdHere\"\n}";
+  let defaultTokenObj = {
+    discord_bot_token : "PasteTokenHere",
+    wolfram_app_id : "PasteAppIdHere",
+    bot_owner_discord_id : "PasteIdHere",
+    users : [
+      {
+        id : "PasteIdHere",
+        defaultNickname : "NameHere",
+        defaultRoles : [
+          "role1",
+          "role2"
+        ]
+      }
+    ]
+  };
+  let defaultTokenString = JSON.stringify(defaultTokenObj, null, 2);
   fs.writeFileSync('tokens.json',defaultTokenString);
   console.log("Edit discord token and wolfram app id in the file tokens.json")
   process.exit();
 }
 const LOGIN_TOKEN = tokens.discord_bot_token;
 const WOLFRAM_ALPHA_APP_ID = tokens.wolfram_app_id;
+const BOT_OWNER = tokens.bot_owner_discord_id;
+const USERS = tokens.users;
+let users = new Map();
+for (let i = 0; i < tokens.users.length; i++) {
+  users.set(tokens.users[i].id, tokens.users[i]);
+}
 
 const parseXML = require('xml2js').parseString;
 const querystring = require('querystring');
@@ -55,7 +76,6 @@ class LogHolder {
 
 client.on('message', message => {
   let r = Math.random();
-  console.log(r);
   if (r <= 1 / 10000) {
     message.react("🎉");
   }
@@ -133,6 +153,25 @@ client.on('message', message => {
       customTxt.nonLetter = arr[2];
     }
     message.delete();
+  } else if (cmd === "addmyroles") {
+
+    let user = users.get(message.author.id);
+    if (user !== undefined) {
+      for (let i = 0; i < user.defaultRoles.length; i++) {
+        let role = message.guild.roles.find("name", user.defaultRoles[i]);
+        message.member.addRole(role);
+      }
+      message.channel.send("Your roles have been added " + user.defaultNickname + "!");
+    } else {
+      message.channel.send("You are not registered!");
+    }
+  } else if (cmd === 'whoami') {
+    let uuu = users.get(message.author.id);
+    if (uuu !== undefined) {
+      message.channel.send("```java\n" + JSON.stringify(uuu, null, 2) + "\n```");
+    } else {
+      message.channel.send("```java\n{\n  \"not registered\"\n}\n```");
+    }
   }
 });
 
