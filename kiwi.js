@@ -54,6 +54,11 @@ class LogHolder {
 }
 
 client.on('message', message => {
+  let r = Math.random();
+  console.log(r);
+  if (r <= 1 / 10000) {
+    message.react("🎉");
+  }
   let msgArgs = message.content.split(" "); // An array of all user arguments including the command
   if (msgArgs.length < 1) return;
   let cmd = msgArgs[0].substring(1); // Only the command without the "!"
