@@ -54,7 +54,12 @@ class LogHolder {
 }
 
 client.on('message', message => {
-  if (message.content.substring(0, 6) === '!solve') {
+  let msgArgs = message.content.split(" "); // An array of all user arguments including the command
+  if (msgArgs.length < 1) return;
+  let cmd = msgArgs[0].substring(1); // Only the command without the "!"
+  let msgTxt = message.content.split(/ (.+)/)[1]; // All the users text (not including command)
+
+  if (cmd === 'solve') {
     let logHolder = (new LogHolder());
     let logFunction = function (msg) {
       logHolder.log(msg);
@@ -62,7 +67,7 @@ client.on('message', message => {
     logFunction("--------");
     logFunction(new Date());
     logFunction("User " + message.author.username + " typed \"" + message.content + "\" in " + message.channel.name + ".");
-    let equation = message.content.substring(7, message.content.length);
+    let equation = msgTxt;
     let thinkingMessage = null;
     message.channel.send({embed: {
       color: 3447003,
@@ -104,22 +109,25 @@ client.on('message', message => {
       }
       logHolder.finish();
     });
-  } else if (message.content.substring(0, 7) === '!render') {
-    let msg = message.content.substring(8);
+  } else if (cmd === 'render1') {
+    let msg = msgTxt;
     message.channel.send(customTxt.render1(msg));
-  } else if (message.content.substring(0, 10) === '!lagrender') {
-    let msg = message.content.substring(11);
+    message.delete();
+  } else if (cmd === 'render') {
+    let msg = msgTxt;
     if (msg.length <= 6) {
       message.channel.send(customTxt.render(msg));
     } else {
       message.channel.send("Maximum 6 Characters!");
     }
-  } else if (message.content.substring(0, 11) === '!lagsymbols') {
-    let arr = message.content.split(" ");
+    message.delete();
+  } else if (cmd === 'sym') {
+    let arr = msgArgs;
     if (arr.length >= 3) {
       customTxt.letter = arr[1];
       customTxt.nonLetter = arr[2];
     }
+    message.delete();
   }
 });
 
