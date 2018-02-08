@@ -18,6 +18,10 @@ if (fs.existsSync('tokens.json')) {
         defaultRoles : [
           "role1",
           "role2"
+        ],
+        defaultNonRoles : [
+          "role1",
+          "role2"
         ]
       }
     ]
@@ -79,11 +83,21 @@ client.on('message', message => {
   if (r <= 1 / 10000) {
     message.react("🎉");
   }
-  let msgArgs = message.content.split(" "); // An array of all user arguments including the command
-  if (msgArgs.length < 1) return;
-  let cmd = msgArgs[0].substring(1); // Only the command without the "!"
-  let msgTxt = message.content.split(/ (.+)/)[1]; // All the users text (not including command)
 
+  // Check if command
+  if (message.content.charAt(0) !== "!") return;
+  // Parse command
+  let msgArgs = message.content.split(" "); // An array of all user arguments including the command
+  let cmd = msgArgs[0].substring(1); // Only the command without the "!"
+  let tmpArr = message.content.split(/ (.+)/);
+  let msgTxt;
+  if (tmpArr.length > 1) msgTxt = tmpArr[1]; // All the users text (not including command)
+  else msgTxt = "";
+  // Function for sending message temporarily (removes senders message)
+  function send(msg) {
+    sendTemp(message.channel, msg, 20000, [message]);
+  }
+  // Only messages starting with ! will be processed below this line
   if (cmd === 'solve') {
     let logHolder = (new LogHolder());
     let logFunction = function (msg) {
@@ -153,26 +167,70 @@ client.on('message', message => {
       customTxt.nonLetter = arr[2];
     }
     message.delete();
-  } else if (cmd === "addmyroles") {
-
+  } else if (cmd === "role-reset") {
     let user = users.get(message.author.id);
     if (user !== undefined) {
       for (let i = 0; i < user.defaultRoles.length; i++) {
         let role = message.guild.roles.find("name", user.defaultRoles[i]);
         message.member.addRole(role);
       }
-      message.channel.send("Your roles have been added " + user.defaultNickname + "!");
+
+      for (let i = 0; i < user.defaultNonRoles.length; i++) {
+        let role = message.guild.roles.find("name", user.defaultNonRoles[i]);
+        message.member.removeRole(role);
+      }
+      send("Your roles have been reset " + user.defaultNickname + "!");
     } else {
-      message.channel.send("You are not registered!");
+      send("You are not registered!");
     }
-  } else if (cmd === 'whoami') {
-    let uuu = users.get(message.author.id);
-    if (uuu !== undefined) {
-      message.channel.send("```java\n" + JSON.stringify(uuu, null, 2) + "\n```");
+  } else if (cmd === 'role-clear') {
+    let user = users.get(message.author.id);
+    if (user !== undefined) {
+      let rawArr = Array.from(message.member.roles);
+      let roleArr = new Array();
+
+      for (let i = 0; i < rawArr.length; i++) {
+        let role = rawArr[i][1];
+        if (role.name !== "@everyone") message.member.removeRole(role);
+      }
+      send("Your roles have been cleared " + user.defaultNickname + "!");
     } else {
-      message.channel.send("```java\n{\n  \"not registered\"\n}\n```");
+      send("You are not registered!");
+    }
+  } else if (cmd === 'user-info') {
+    if (msgTxt === "") {
+      let uuu = users.get(message.author.id);
+      if (uuu !== undefined) {
+        send("```java\n" + JSON.stringify(uuu, null, 2) + "\n```");
+      } else {
+        send("```java\n{\n  \"not registered\"\n}\n```");
+      }
+    } else {
+      let found = false;
+      for (let i = 0; i < USERS.length; i++) {
+        if (USERS[i].defaultNickname.toLowerCase() === msgTxt) {
+          send("```java\n" + JSON.stringify(USERS[i], null, 2) + "\n```");
+          found = true;
+          break;
+        }
+      }
+      if (!found) send("```java\n{\n  \"not registered\"\n}\n```");
     }
   }
 });
+
+function sendTemp(channel, msg, duration, otherMessagesArray) {
+  channel.send(msg)
+    .then((message) => {
+      setTimeout(() => {
+         message.delete();
+         if (otherMessagesArray !== undefined) {
+           for (let i = 0; i < otherMessagesArray.length; i++) {
+             otherMessagesArray[i].delete();
+           }
+         }
+       }, duration);
+    });
+}
 
 client.login(LOGIN_TOKEN);
