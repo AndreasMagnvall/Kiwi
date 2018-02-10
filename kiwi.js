@@ -11,6 +11,8 @@ if (fs.existsSync('tokens.json')) {
     discord_bot_token : "PasteTokenHere",
     wolfram_app_id : "PasteAppIdHere",
     bot_owner_discord_id : "PasteIdHere",
+    default_server_id : "PasteIdHere",
+    default_channel_id : "PasteIdHere",
     users : [
       {
         id : "PasteIdHere",
@@ -35,6 +37,8 @@ const LOGIN_TOKEN = tokens.discord_bot_token;
 const WOLFRAM_ALPHA_APP_ID = tokens.wolfram_app_id;
 const BOT_OWNER = tokens.bot_owner_discord_id;
 const USERS = tokens.users;
+const DEFAULT_SERVER = tokens.default_server_id;
+const DEFAULT_CHANNEL = tokens.default_channel_id;
 let users = new Map();
 for (let i = 0; i < tokens.users.length; i++) {
   users.set(tokens.users[i].id, tokens.users[i]);
@@ -50,17 +54,133 @@ const wolfram = new WolframModule(WOLFRAM_ALPHA_APP_ID, log);
 const customText = require('./customText');
 let customTxt = new customText("▰","▱");
 
+// Notifications
+const JSONHandler = require('./jsonhandler.js');
+let notify;
+let checkEntries;
+let addEntry;
+let updateList;
+
+// Log file
 function log(message) {
   console.log(message);
   fs.appendFileSync('log.txt', message + "\n");
+}
+
+// Get date string
+Number.prototype.padLeft = function(base,chr){
+    var  len = (String(base || 10).length - String(this).length)+1;
+    return len > 0? new Array(len).join(chr || '0')+this : this;
+}
+function timeToString(time) {
+  let d = new Date();
+  d.setTime(time);
+  return  [d.getFullYear(),
+     (d.getMonth()+1).padLeft(),
+     d.getDate().padLeft()].join('-') +' ' +
+    [d.getHours().padLeft(),
+     d.getMinutes().padLeft()].join(':');
 }
 
 client.on('ready', () => {
   log("");
   log("-------------------------------------------------------------");
   log((new Date()).toString());
-  log('Discord MathBot is ready!');
+  log('Kiwi is ready!');
+
+  notify = new JSONHandler(fs, 'notifications.json', (fileExists, loadSuccessful) => {
+    checkEntries = function(cb) {
+      let d = new Date();
+      let time = d.getTime();
+      for (let i = notify.obj.scheduled.length; i >= 0; i--) {
+        let entry = notify.obj.scheduled[i];
+        if (entry === undefined) continue;
+        if ((entry.time-30000) <= time) {
+          notify.obj.scheduled.splice(i, 1);
+          if (cb) {
+            cb(entry.message);
+          } else {
+            console.log("No callback specified, notification will display here:");
+            console.log(entry.message);
+          }
+        }
+      }
+      updateList();
+      setTimeout(() => {notify.save()}, 10000);
+      // Calculate next check
+      setTimeout(() => {
+        checkEntries(cb);
+      }, 60000-((d.getSeconds())*1000));
+    }
+
+    updateList = function() {
+      notify.list = "index : date and time : message\n";
+      for (let i = 0; i < notify.obj.scheduled.length; i++) {
+        let entry =  notify.obj.scheduled[i];
+        notify.list += i + ": " + entry.timeString + " : " + entry.message + "\n";
+      }
+    }
+    updateList();
+
+    addEntry = function(timeOrDateAndTime, message) {
+      if (notify.obj.scheduled.length >= 5) return [false, "Too many notifications, remove notifications by !notify-remove <index>\nGet a list of all notifications by typing !notify-list"];
+      let d = new Date();
+      let now = new Date();
+      let timeReg = /\d{1,2}:\d{1,2}/;
+      let timeAndDateReg = /\d\d\d\d-\d\d-\d\d \d{1,2}:\d{1,2}/;
+      let timeError = "Someting wrong with time or date input?";
+      if (timeOrDateAndTime.length <= 20) {
+        if (timeAndDateReg.test(timeOrDateAndTime)) {
+          let theTime = Date.parse(timeOrDateAndTime);
+          d.setTime(theTime);
+        } else if (timeReg.test(timeOrDateAndTime)) {
+          let time = timeOrDateAndTime.split(":");
+          //if (time[0].length === 1) time[0] = "0" + time[0];
+          d.setHours(time[0]);
+          d.setMinutes(time[1]);
+          d.setSeconds(0);
+          d.setMilliseconds(0);
+          let diff = d.getTime() - now.getTime();
+          if (diff <= 0) d.setDate(d.getDate() + 1);
+        } else return [false, timeError];
+      } else return [false, timeError];
+      timeString = timeToString(d.getTime());
+      notify.obj.scheduled.push({
+        message : message,
+        time : d.getTime(),
+        timeString : timeString
+      });
+      let res = "Notification set: " + timeString + " : " + message;
+      updateList();
+      return [true,res];
+    }
+    if (!fileExists) {
+      console.log("notifications.json not found, creating...");
+      notify.obj = {
+        scheduled : []
+      };
+      notify.save();
+    } else {
+      console.log("Load of notifications.json successful!");
+      if (notify.obj.scheduled === undefined) {
+        notify.obj = {
+          scheduled : []
+        };
+        notify.save();
+      }
+    }
+    let channel = client.guilds.get(DEFAULT_SERVER)
+      .channels.get(DEFAULT_CHANNEL);
+    checkEntries((message) => {
+      channel.send({embed: {
+        color: 0xFFEEA0,
+        title: "Notification",
+        description: message
+      }});
+    });
+  });
 });
+
 
 class LogHolder {
   constructor() {
@@ -216,6 +336,39 @@ client.on('message', message => {
       }
       if (!found) send("```java\n{\n  \"not registered\"\n}\n```");
     }
+  } else if (cmd === 'notify') {
+    let message;
+    let time;
+    if (msgArgs.length >= 3) {
+      if (/\d{1,2}:\d{1,2}/.test(msgArgs[2])) {
+        message = "";
+        for (let i = 3; i < msgArgs.length; i++) {
+          message += msgArgs[i] + " ";
+        }
+        message = message.slice(0, -1);
+        time = msgArgs[1] + " " + msgArgs[2];
+      } else {
+        message = "";
+        for (let i = 2; i < msgArgs.length; i++) {
+          message += msgArgs[i] + " ";
+        }
+        message = message.slice(0, -1);
+        time = msgArgs[1];
+      }
+    } else return;
+    let response = addEntry(time, message);
+    send(response[1]);
+  } else if (cmd === 'notify-list') {
+    sendTemp(message.channel, "```\n" + notify.list + "```", 60000, [message]);
+  } else if (cmd === 'notify-remove') {
+    if (msgArgs.length > 1) {
+      let index = Number(msgArgs[1]);
+      if (index >= 0 && index < notify.obj.scheduled.length) {
+        notify.obj.scheduled.splice(index, 1);
+        send("Entry " + index + " was removed successfuly!");
+        updateList();
+      } else send("Index not found!\nType !notify-list to get a list of all entries!")
+    } else send("Type !notify-remove <index>");
   }
 });
 

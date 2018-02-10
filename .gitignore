@@ -62,3 +62,6 @@ tokens.json
 
 # Log file
 log.txt
+
+# Notifications file
+notifications.json
