@@ -96,7 +96,7 @@ class Prison {
           return this.jail(user);
         }
         user.votePrison.add(message.author.id);
-        return "Vote for un-prison started for " + user.defaultNickname + "\nAuto cancel in " + this.votingExpiration + " seconds.\n" +
+        return "Vote for prison started for " + user.defaultNickname + "\nAuto cancel in " + this.votingExpiration + " seconds.\n" +
           (this.votesRequired - user.votePrison.size) + " vote(s) needed.";
       } else {
         if(!user.votePrison.has(message.author.id)) {
