@@ -13,6 +13,8 @@ if (fs.existsSync('tokens.json')) {
     bot_owner_discord_id : "PasteIdHere",
     default_server_id : "PasteIdHere",
     default_channel_id : "PasteIdHere",
+    prison_role_name : "NameHere",
+    prison_channel_id : "idHere",
     users : [
       {
         id : "PasteIdHere",
@@ -39,6 +41,8 @@ const BOT_OWNER = tokens.bot_owner_discord_id;
 const USERS = tokens.users;
 const DEFAULT_SERVER = tokens.default_server_id;
 const DEFAULT_CHANNEL = tokens.default_channel_id;
+const PRISON_CHANNEL = tokens.prison_channel_id;
+const PRISON_ROLE = tokens.prison_role_name;
 let users = new Map();
 for (let i = 0; i < tokens.users.length; i++) {
   users.set(tokens.users[i].id, tokens.users[i]);
@@ -60,6 +64,123 @@ let notify;
 let checkEntries;
 let addEntry;
 let updateList;
+
+// Prison
+let prison;
+class Prison {
+  constructor(client) {
+    this.client = client;
+    this.users = new Map();
+    for (let i = 0; i < USERS.length; i++) {
+      let name = USERS[i].defaultNickname.toLowerCase();
+      this.users.set(name, USERS[i]);
+    }
+    this.votesRequired = 3;
+    this.votingExpiration = 60;
+  }
+
+  jailVote(userNickname, message) {
+    let user = this.users.get(userNickname.toLowerCase());
+    if (user !== undefined) {
+      if (user.votePrison === undefined) {
+        user.votePrison = new Set();
+        user.cancelPrison = setTimeout(() => {
+          user.votePrison = undefined;
+          user.cancelPrison = undefined;
+          sendTemp(message.channel, "Voting for prison expired for user " + user.defaultNickname, 20000);
+        }, this.votingExpiration * 1000);
+        if (this.votesRequired === 1) {
+          clearTimeout(user.cancelPrison);
+          user.cancelPrison = undefined;
+          user.votePrison = undefined;
+          return this.jail(user);
+        }
+        user.votePrison.add(message.author.id);
+        return "Vote for un-prison started for " + user.defaultNickname + "\nAuto cancel in " + this.votingExpiration + " seconds.\n" +
+          (this.votesRequired - user.votePrison.size) + " vote(s) needed.";
+      } else {
+        if(!user.votePrison.has(message.author.id)) {
+          user.votePrison.add(message.author.id);
+          if (user.votePrison.size >= this.votesRequired) {
+            clearTimeout(user.cancelPrison);
+            user.cancelPrison = undefined;
+            user.votePrison = undefined;
+            return this.jail(user);
+          }
+        } return "You have already voted! " + (this.votesRequired - user.votePrison.size) + " more vote(s) needed";
+      }
+    } else return "This user does not exist!";
+  }
+
+  unJailVote(userNickname, message) {
+    let user = this.users.get(userNickname.toLowerCase());
+    if (user !== undefined) {
+      if (user.voteUnPrison === undefined) {
+        user.voteUnPrison = new Set();
+        user.cancelUnPrison = setTimeout(() => {
+          user.voteUnPrison = undefined;
+          user.cancelUnPrison = undefined;
+          message.channel.send("Voting for un-prison expired for user " + user.defaultNickname);
+        }, this.votingExpiration * 1000);
+        if (this.votesRequired === 1) {
+          clearTimeout(user.cancelUnPrison);
+          user.cancelUnPrison = undefined;
+          user.voteUnPrison = undefined;
+          return this.unJail(user);
+        }
+        user.voteUnPrison.add(message.author.id);
+        return "Vote for un-prison started for " + user.defaultNickname + "\nAuto cancel in " + this.votingExpiration + " seconds.\n" +
+          (this.votesRequired - user.voteUnPrison.size) + " vote(s) needed.";
+      } else {
+        if(!user.voteUnPrison.has(message.author.id)) {
+          user.voteUnPrison.add(message.author.id);
+          if (user.voteUnPrison.size >= this.votesRequired) {
+            clearTimeout(user.cancelUnPrison);
+            user.cancelUnPrison = undefined;
+            user.voteUnPrison = undefined;
+            return this.unJail(user);
+          }
+        } return "You have already voted! " + (this.votesRequired - user.voteUnPrison.size) + " more vote(s) needed";
+      }
+    } else return "This user does not exist!";
+  }
+
+  jail(user) {
+    let guild = this.client.guilds.get(DEFAULT_SERVER);
+    let member = guild.members.get(user.id);
+    if (user !== undefined) {
+      let rawArr = Array.from(member.roles);
+      let roleArr = new Array();
+
+      for (let i = 0; i < rawArr.length; i++) {
+        let role = rawArr[i][1];
+        if (role.name !== "@everyone") member.removeRole(role);
+      }
+
+      for (let i = 0; i < user.defaultNonRoles.length; i++) {
+        let role = guild.roles.find("name", user.defaultNonRoles[i]);
+        member.addRole(role);
+      }
+
+      return user.defaultNickname + " have been sent to prison!";
+    }
+  }
+
+  unJail(user) {
+    let guild = this.client.guilds.get(DEFAULT_SERVER);
+    let member = guild.members.get(user.id);
+    for (let i = 0; i < user.defaultRoles.length; i++) {
+      let role = guild.roles.find("name", user.defaultRoles[i]);
+      member.addRole(role);
+    }
+
+    for (let i = 0; i < user.defaultNonRoles.length; i++) {
+      let role = guild.roles.find("name", user.defaultNonRoles[i]);
+      member.removeRole(role);
+    }
+    return user.defaultNickname + " have been released from prison!";
+  }
+}
 
 // Log file
 function log(message) {
@@ -87,6 +208,8 @@ client.on('ready', () => {
   log("-------------------------------------------------------------");
   log((new Date()).toString());
   log('Kiwi is ready!');
+
+  prison = new Prison(client);
 
   notify = new JSONHandler(fs, 'notifications.json', (fileExists, loadSuccessful) => {
     checkEntries = function(cb) {
@@ -199,10 +322,17 @@ class LogHolder {
 }
 
 client.on('message', message => {
+  // Code that runs on every message
   let r = Math.random();
   if (r <= 1 / 10000) {
     message.react("🎉");
   }
+
+  // if (censor) {
+  //   if (USERS[4].id == message.author.id) {
+  //     message.delete();
+  //   }
+  // }
 
   // Check if command
   if (message.content.charAt(0) !== "!") return;
@@ -287,36 +417,6 @@ client.on('message', message => {
       customTxt.nonLetter = arr[2];
     }
     message.delete();
-  } else if (cmd === "role-reset") {
-    let user = users.get(message.author.id);
-    if (user !== undefined) {
-      for (let i = 0; i < user.defaultRoles.length; i++) {
-        let role = message.guild.roles.find("name", user.defaultRoles[i]);
-        message.member.addRole(role);
-      }
-
-      for (let i = 0; i < user.defaultNonRoles.length; i++) {
-        let role = message.guild.roles.find("name", user.defaultNonRoles[i]);
-        message.member.removeRole(role);
-      }
-      send("Your roles have been reset " + user.defaultNickname + "!");
-    } else {
-      send("You are not registered!");
-    }
-  } else if (cmd === 'role-clear') {
-    let user = users.get(message.author.id);
-    if (user !== undefined) {
-      let rawArr = Array.from(message.member.roles);
-      let roleArr = new Array();
-
-      for (let i = 0; i < rawArr.length; i++) {
-        let role = rawArr[i][1];
-        if (role.name !== "@everyone") message.member.removeRole(role);
-      }
-      send("Your roles have been cleared " + user.defaultNickname + "!");
-    } else {
-      send("You are not registered!");
-    }
   } else if (cmd === 'user-info') {
     if (msgTxt === "") {
       let uuu = users.get(message.author.id);
@@ -369,6 +469,14 @@ client.on('message', message => {
         updateList();
       } else send("Index not found!\nType !notify-list to get a list of all entries!")
     } else send("Type !notify-remove <index>");
+  } else if (cmd === 'jail') {
+    if (msgArgs.length > 1) {
+      message.channel.send(prison.jailVote(msgArgs[1], message));
+    }
+  } else if (cmd === 'unjail') {
+    if (msgArgs.length > 1) {
+      message.channel.send(prison.unJailVote(msgArgs[1], message));
+    }
   }
 });
 
