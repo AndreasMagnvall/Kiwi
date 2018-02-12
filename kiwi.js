@@ -359,7 +359,12 @@ client.on('message', message => {
     sendTemp(message.channel, msg, 20000, [message]);
   }
   // Only messages starting with ! will be processed below this line
-  if (cmd === 'solve') {
+  if (cmd === 'help-kiwi') {
+    message.channel.send({embed: {
+      color: 3447003,
+      description: l.help_info
+    }});
+  } else if (cmd === 'solve') {
     let logHolder = (new LogHolder());
     let logFunction = function (msg) {
       logHolder.log(msg);
@@ -409,7 +414,7 @@ client.on('message', message => {
       }
       logHolder.finish();
     });
-  } else if (cmd === 'render1') {
+  } else if (cmd === 'render-line') {
     let msg = msgTxt;
     message.channel.send(customTxt.render1(msg));
     message.delete();

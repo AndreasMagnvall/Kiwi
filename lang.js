@@ -12,6 +12,21 @@ module.exports = class Lang {
 
           ready_message : "Kiwi är redo!",
 
+          help_info_title : "Hjälpinfo för Kiwi",
+          help_info : "Kommandon:\n"+
+                        "**!help-kiwi**   Visar den här sidan.\n"+
+                        "**!solve <equation>**   Hittar steg för steg lösningar via wolframalpha.com.\n"+
+                        "**!render-line <text>**   Skapar text med linjer.\n"+
+                        "**!render <text>**   Rendera text uppbyggda av symboler.\n"+
+                        "**!sym <textSymbol> <backgroundSymbol>**   Ställ in de symboler som ska användas när text ritas med !render.\n"+
+                        "**!user-info <name>**   Hämta information från servern om en person.\n"+
+                        "**!notify <YYYY-MM-DD> <HH:MM> <text>**   Skapa notis som skickas i general-chatten vid tidpunkten.\n"+
+                        "**!notify <HH:MM> <text>**   Skapa notis som skickas i general-chatten vid tidpunkten.\n"+
+                        "**!notify-list**   Visar en lista på de notiser som väntar.\n"+
+                        "**!notify-remove <index>**   Tar bort en notis.\n"+
+                        "**!imprison <name>**   Fängsla en person på servern.\n"+
+                        "**!pardon <name>**   Ta bort en person från fängelset.\n",
+
           vote_prison_expire : "Fängelseröstningen avbröts för ",
           vote_prison1 : "Du röstade för ",
           vote_prison2 : " röst(er) till krävs.",
@@ -54,6 +69,21 @@ module.exports = class Lang {
           vote_prison_start4 : " vote(s) needed.",
 
           ready_message : "Kiwi is ready!",
+
+          help_info_title : "Help info for Kiwi",
+          help_info : "Commands:\n"+
+                        "**!help-kiwi**   Shows this page.\n"+
+                        "**!solve <equation>**   Finds step by step solutions using wolframalpha.com.\n"+
+                        "**!render-line <text>**   Creates text with lines.\n"+
+                        "**!render <text>**   Render text with symbols.\n"+
+                        "**!sym <textSymbol> <backgroundSymbol>**   Set the symbols used by !render.\n"+
+                        "**!user-info <name>**   Fetch info about a person from the server.\n"+
+                        "**!notify <YYYY-MM-DD> <HH:MM> <text>**   Create a notification that gets displayed in general at the specified time.\n"+
+                        "**!notify <HH:MM> <text>**   Create a notification that gets displayed in general at the specified time.\n"+
+                        "**!notify-list**   Display a list of all awaiting notifications.\n"+
+                        "**!notify-remove <index>**   Removes a notification.\n"+
+                        "**!imprison <name>**   Imprison a person on the server.\n"+
+                        "**!pardon <name>**   Pardon a person on the server.\n",
 
           vote_prison_expire : "Voting for prison expired for user ",
           vote_prison1 : "You voted for ",
