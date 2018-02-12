@@ -2,11 +2,15 @@ const fs = require('fs');
 const LOGS = true;
 const DEBUG_LOGS = false;
 const Discord = require('discord.js');
+const Lang = require('./lang.js');
+let swedish = new Lang('SV');
+let l = swedish.dict;
 let tokens;
+
 if (fs.existsSync('tokens.json')) {
   tokens = JSON.parse(fs.readFileSync('tokens.json','utf8'));
 } else {
-  console.log("No tokens.json exist, creating one...");
+  console.log(l.tokens_file_not_found);
   let defaultTokenObj = {
     discord_bot_token : "PasteTokenHere",
     wolfram_app_id : "PasteAppIdHere",
@@ -32,7 +36,7 @@ if (fs.existsSync('tokens.json')) {
   };
   let defaultTokenString = JSON.stringify(defaultTokenObj, null, 2);
   fs.writeFileSync('tokens.json',defaultTokenString);
-  console.log("Edit discord token and wolfram app id in the file tokens.json")
+  console.log(l.token_info);
   process.exit();
 }
 const LOGIN_TOKEN = tokens.discord_bot_token;
@@ -90,7 +94,7 @@ class Prison {
         user.cancelPrison = setTimeout(() => {
           user.votePrison = undefined;
           user.cancelPrison = undefined;
-          message.channel.send("Voting for prison expired for user " + user.defaultNickname);
+          message.channel.send(l.vote_prison_expire + user.defaultNickname);
         }, this.votingExpiration * 1000);
         if (this.votesRequired === 1) {
           clearTimeout(user.cancelPrison);
@@ -99,8 +103,8 @@ class Prison {
           return this.jail(user);
         }
         user.votePrison.add(message.author.id);
-        return "Vote for prison started for " + user.defaultNickname + "\nAuto cancel in " + this.votingExpiration + " seconds.\n" +
-          (this.votesRequired - user.votePrison.size) + " vote(s) needed.";
+        return l.vote_prison_start1 + user.defaultNickname + l.vote_prison_start2 + this.votingExpiration + l.vote_prison_start3 +
+          (this.votesRequired - user.votePrison.size) + l.vote_prison_start4;
       } else {
         if(!user.votePrison.has(message.author.id)) {
           user.votePrison.add(message.author.id);
@@ -110,10 +114,10 @@ class Prison {
             user.votePrison = undefined;
             return this.jail(user);
           }
-          return "You voted for " + user.defaultNickname + ". " + (this.votesRequired - user.votePrison.size) + " more vote(s) needed";
-        } else return "You have already voted! " + (this.votesRequired - user.votePrison.size) + " more vote(s) needed";
+          return l.vote_prison1 + user.defaultNickname + ". " + (this.votesRequired - user.votePrison.size) + l.vote_prison2;
+        } else return l.vote_prison3 + (this.votesRequired - user.votePrison.size) + l.vote_prison2;
       }
-    } else return "This user does not exist!";
+    } else return l.user_not_found;
   }
 
   unJailVote(userNickname, message) {
@@ -124,7 +128,7 @@ class Prison {
         user.cancelUnPrison = setTimeout(() => {
           user.voteUnPrison = undefined;
           user.cancelUnPrison = undefined;
-          message.channel.send("Voting for un-prison expired for user " + user.defaultNickname);
+          message.channel.send(l.vote_prison_expire + user.defaultNickname);
         }, this.votingExpiration * 1000);
         if (this.votesRequired === 1) {
           clearTimeout(user.cancelUnPrison);
@@ -133,8 +137,8 @@ class Prison {
           return this.unJail(user);
         }
         user.voteUnPrison.add(message.author.id);
-        return "Vote for un-prison started for " + user.defaultNickname + "\nAuto cancel in " + this.votingExpiration + " seconds.\n" +
-          (this.votesRequired - user.voteUnPrison.size) + " vote(s) needed.";
+        return l.vote_prison_start1 + user.defaultNickname + l.vote_prison_start2 + this.votingExpiration + l.vote_prison_start3 +
+            (this.votesRequired - user.voteUnPrison.size) + l.vote_prison_start4;
       } else {
         if(!user.voteUnPrison.has(message.author.id)) {
           user.voteUnPrison.add(message.author.id);
@@ -144,10 +148,10 @@ class Prison {
             user.voteUnPrison = undefined;
             return this.unJail(user);
           }
-          return "You voted for " + user.defaultNickname + ". " + (this.votesRequired - user.voteUnPrison.size) + " more vote(s) needed";
-        } else return "You have already voted! " + (this.votesRequired - user.voteUnPrison.size) + " more vote(s) needed";
+          return l.vote_prison1 + user.defaultNickname + ". " + (this.votesRequired - user.voteUnPrison.size) + l.vote_prison2;
+        } else return l.vote_prison3 + (this.votesRequired - user.voteUnPrison.size) + l.vote_prison2;
       }
-    } else return "This user does not exist!";
+    } else return l.user_not_found;
   }
 
   jail(user) {
@@ -167,7 +171,7 @@ class Prison {
         member.addRole(role);
       }
 
-      return user.defaultNickname + " have been sent to prison!";
+      return user.defaultNickname + l.vote_prison4;
     }
   }
 
@@ -183,7 +187,7 @@ class Prison {
       let role = guild.roles.find("name", user.defaultNonRoles[i]);
       member.removeRole(role);
     }
-    return user.defaultNickname + " have been released from prison!";
+    return user.defaultNickname + l.vote_prison5;
   }
 }
 
@@ -212,7 +216,7 @@ client.on('ready', () => {
   log("");
   log("-------------------------------------------------------------");
   log((new Date()).toString());
-  log('Kiwi is ready!');
+  log(l.ready_message);
 
   prison = new Prison(client);
   defaultGuild = client.guilds.get(DEFAULT_SERVER);
@@ -230,7 +234,7 @@ client.on('ready', () => {
           if (cb) {
             cb(entry.message);
           } else {
-            console.log("No callback specified, notification will display here:");
+            console.log(l.notify_no_callback);
             console.log(entry.message);
           }
         }
@@ -244,7 +248,7 @@ client.on('ready', () => {
     }
 
     updateList = function() {
-      notify.list = "index : date and time : message\n";
+      notify.list = l.notify_header;
       for (let i = 0; i < notify.obj.scheduled.length; i++) {
         let entry =  notify.obj.scheduled[i];
         notify.list += i + ": " + entry.timeString + " : " + entry.message + "\n";
@@ -253,19 +257,18 @@ client.on('ready', () => {
     updateList();
 
     addEntry = function(timeOrDateAndTime, message) {
-      if (notify.obj.scheduled.length >= 5) return [false, "Too many notifications, remove notifications by !notify-remove <index>\nGet a list of all notifications by typing !notify-list"];
+      if (notify.obj.scheduled.length >= 5) return [false, l.notify_overflow];
       let d = new Date();
       let now = new Date();
       let timeReg = /\d{1,2}:\d{1,2}/;
       let timeAndDateReg = /\d\d\d\d-\d\d-\d\d \d{1,2}:\d{1,2}/;
-      let timeError = "Someting wrong with time or date input?";
+      let timeError = l.notify_time_or_date_input_error;
       if (timeOrDateAndTime.length <= 20) {
         if (timeAndDateReg.test(timeOrDateAndTime)) {
           let theTime = Date.parse(timeOrDateAndTime);
           d.setTime(theTime);
         } else if (timeReg.test(timeOrDateAndTime)) {
           let time = timeOrDateAndTime.split(":");
-          //if (time[0].length === 1) time[0] = "0" + time[0];
           d.setHours(time[0]);
           d.setMinutes(time[1]);
           d.setSeconds(0);
@@ -280,18 +283,18 @@ client.on('ready', () => {
         time : d.getTime(),
         timeString : timeString
       });
-      let res = "Notification set: " + timeString + " : " + message;
+      let res = l.notify_set + timeString + " : " + message;
       updateList();
-      return [true,res];
+      return [true, res];
     }
     if (!fileExists) {
-      console.log("notifications.json not found, creating...");
+      console.log(l.notify_json_not_found);
       notify.obj = {
         scheduled : []
       };
       notify.save();
     } else {
-      console.log("Load of notifications.json successful!");
+      console.log(l.notify_json_found);
       if (notify.obj.scheduled === undefined) {
         notify.obj = {
           scheduled : []
@@ -304,7 +307,7 @@ client.on('ready', () => {
     checkEntries((message) => {
       channel.send({embed: {
         color: 0xFFEEA0,
-        title: "Notification",
+        title: l.notify_notification_title,
         description: message
       }});
     });
@@ -368,7 +371,7 @@ client.on('message', message => {
     let thinkingMessage = null;
     message.channel.send({embed: {
       color: 3447003,
-      description: "En fundering pågår... :thinking:"
+      description: l.wolfram_thinking
     }}).then(function(msg) {
       if (thinkingMessage == null) {
         thinkingMessage = msg;
@@ -385,21 +388,21 @@ client.on('message', message => {
         function setMessage() {
           var solutionsCount = data.length;
           if (solutionsCount == 1) {
-            return data.length + " lösning hittades... :bulb:";
+            return data.length + l.wolfram_solution_found1;
           } else {
-            return data.length + " lösningar hittades... :bulb:";
+            return data.length + l.wolfram_solution_found1;
           }
         }
       }
       if (data.length != 0) {
         for (let i = 0; i < data.length; i++) {
-          var embed = new Discord.RichEmbed().setDescription(data[i].name + " for: " + equation).setImage(data[i].imgURL);
+          var embed = new Discord.RichEmbed().setDescription(data[i].name + l.wolfram_for + equation).setImage(data[i].imgURL);
           message.channel.send({
             embed
           });
         }
       } else {
-        var embed = new Discord.RichEmbed().setDescription("Inga steg för steg lösningar hittades. Gå in på länken för mer info:\n" + "https://www.wolframalpha.com/input/?i=" + encodeURIComponent(equation));
+        var embed = new Discord.RichEmbed().setDescription(l.wolfram_no_step_by_step + "https://www.wolframalpha.com/input/?i=" + encodeURIComponent(equation));
         message.channel.send({
           embed
         });
@@ -415,7 +418,7 @@ client.on('message', message => {
     if (msg.length <= 6) {
       message.channel.send(customTxt.render(msg));
     } else {
-      message.channel.send("Maximum 6 Characters!");
+      message.channel.send(l.render_max_6_chars);
     }
     message.delete();
   } else if (cmd === 'sym') {
@@ -431,7 +434,7 @@ client.on('message', message => {
       if (uuu !== undefined) {
         send("```java\n" + JSON.stringify(uuu, null, 2) + "\n```");
       } else {
-        send("```java\n{\n  \"not registered\"\n}\n```");
+        send("```java\n{\n  \"" + l.user_info_not_registered + "\"\n}\n```");
       }
     } else {
       let found = false;
@@ -442,7 +445,7 @@ client.on('message', message => {
           break;
         }
       }
-      if (!found) send("```java\n{\n  \"not registered\"\n}\n```");
+      if (!found) send("```java\n{\n  \"" + l.user_info_not_registered + "\"\n}\n```");
     }
   } else if (cmd === 'notify') {
     let message;
@@ -475,13 +478,13 @@ client.on('message', message => {
         notify.obj.scheduled.splice(index, 1);
         send("Entry " + index + " was removed successfuly!");
         updateList();
-      } else send("Index not found!\nType !notify-list to get a list of all entries!")
-    } else send("Type !notify-remove <index>");
-  } else if (cmd === 'jail') {
+      } else send(l.notify_index_not_found)
+    } else send(l.notify_remove_syntax_error);
+  } else if (cmd === 'imprison') {
     if (msgArgs.length > 1) {
       message.channel.send(prison.jailVote(msgArgs[1], message));
     }
-  } else if (cmd === 'unjail') {
+  } else if (cmd === 'pardon') {
     if (msgArgs.length > 1) {
       message.channel.send(prison.unJailVote(msgArgs[1], message));
     }
