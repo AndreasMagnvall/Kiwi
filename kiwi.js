@@ -345,11 +345,11 @@ client.on('message', message => {
     }
   }
 
-  if (message.author.id == USERS[1].id) {
-    message.react("🤜").then(() => {
-      message.react(defaultGuild.emojis.find('name', USERS[1].defaultNickname.toLowerCase()));
-    });
-  }
+  // if (message.author.id == USERS[1].id) {
+  //   message.react("🤜").then(() => {
+  //     message.react(defaultGuild.emojis.find('name', USERS[1].defaultNickname.toLowerCase()));
+  //   });
+  // }
 
   // Check if command
   if (message.content.charAt(0) !== "!") return;
