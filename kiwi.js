@@ -362,6 +362,7 @@ client.on('message', message => {
   if (cmd === 'help-kiwi') {
     message.channel.send({embed: {
       color: 3447003,
+      title: l.help_info_title,
       description: l.help_info
     }});
   } else if (cmd === 'solve') {

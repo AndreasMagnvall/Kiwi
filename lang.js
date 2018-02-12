@@ -13,7 +13,7 @@ module.exports = class Lang {
           ready_message : "Kiwi är redo!",
 
           help_info_title : "Hjälpinfo för Kiwi",
-          help_info : "Kommandon:\n"+
+          help_info : "Kommandon:\n\n"+
                         "**!help-kiwi**   Visar den här sidan.\n"+
                         "**!solve <equation>**   Hittar steg för steg lösningar via wolframalpha.com.\n"+
                         "**!render-line <text>**   Skapar text med linjer.\n"+
@@ -71,7 +71,7 @@ module.exports = class Lang {
           ready_message : "Kiwi is ready!",
 
           help_info_title : "Help info for Kiwi",
-          help_info : "Commands:\n"+
+          help_info : "Commands:\n\n"+
                         "**!help-kiwi**   Shows this page.\n"+
                         "**!solve <equation>**   Finds step by step solutions using wolframalpha.com.\n"+
                         "**!render-line <text>**   Creates text with lines.\n"+
