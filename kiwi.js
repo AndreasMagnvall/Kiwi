@@ -345,12 +345,6 @@ client.on('message', message => {
     }
   }
 
-  // if (message.author.id == USERS[1].id) {
-  //   message.react("🤜").then(() => {
-  //     message.react(defaultGuild.emojis.find('name', USERS[1].defaultNickname.toLowerCase()));
-  //   });
-  // }
-
   // Check if command
   if (message.content.charAt(0) !== "!") return;
   // Parse command
@@ -362,7 +356,7 @@ client.on('message', message => {
   else msgTxt = "";
   // Function for sending message temporarily (removes senders message)
   function send(msg) {
-    sendTemp(message.channel, msg, 20000, [message]);
+    message.channel.send(msg);
   }
   // Only messages starting with ! will be processed below this line
   if (cmd === 'help-kiwi') {
@@ -482,7 +476,7 @@ client.on('message', message => {
     let response = addEntry(time, message);
     send(response[1]);
   } else if (cmd === 'notify-list') {
-    sendTemp(message.channel, "```\n" + notify.list + "```", 60000, [message]);
+    send("```\n" + notify.list + "```");
   } else if (cmd === 'notify-remove') {
     if (msgArgs.length > 1) {
       let index = Number(msgArgs[1]);
