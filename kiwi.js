@@ -346,8 +346,9 @@ client.on('message', message => {
   }
 
   if (message.author.id == USERS[1].id) {
-    message.react("🤜");
-    message.react(defaultGuild.emojis.find('name', USERS[1].defaultNickname));
+    message.react("🤜").then(() => {
+      message.react(defaultGuild.emojis.find('name', USERS[1].defaultNickname.toLowerCase()));
+    });
   }
 
   // Check if command
