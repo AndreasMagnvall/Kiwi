@@ -43,6 +43,9 @@ const DEFAULT_SERVER = tokens.default_server_id;
 const DEFAULT_CHANNEL = tokens.default_channel_id;
 const PRISON_CHANNEL = tokens.prison_channel_id;
 const PRISON_ROLE = tokens.prison_role_name;
+let defaultGuild;
+let prisonRole;
+let prisonChannel;
 let users = new Map();
 for (let i = 0; i < tokens.users.length; i++) {
   users.set(tokens.users[i].id, tokens.users[i]);
@@ -107,7 +110,8 @@ class Prison {
             user.votePrison = undefined;
             return this.jail(user);
           }
-        } return "You have already voted! " + (this.votesRequired - user.votePrison.size) + " more vote(s) needed";
+          return "You voted for " + user.defaultNickname + ". " + (this.votesRequired - user.voteUnPrison.size) + " more vote(s) needed";
+        } else return "You have already voted! " + (this.votesRequired - user.votePrison.size) + " more vote(s) needed";
       }
     } else return "This user does not exist!";
   }
@@ -140,7 +144,8 @@ class Prison {
             user.voteUnPrison = undefined;
             return this.unJail(user);
           }
-        } return "You have already voted! " + (this.votesRequired - user.voteUnPrison.size) + " more vote(s) needed";
+          return "You voted for " + user.defaultNickname + ". " + (this.votesRequired - user.voteUnPrison.size) + " more vote(s) needed";
+        } else return "You have already voted! " + (this.votesRequired - user.voteUnPrison.size) + " more vote(s) needed";
       }
     } else return "This user does not exist!";
   }
@@ -210,6 +215,8 @@ client.on('ready', () => {
   log('Kiwi is ready!');
 
   prison = new Prison(client);
+  defaultGuild = client.guilds.get(DEFAULT_SERVER);
+  prisonRole = defaultGuild.roles.find('name', PRISON_ROLE);
 
   notify = new JSONHandler(fs, 'notifications.json', (fileExists, loadSuccessful) => {
     checkEntries = function(cb) {
@@ -328,11 +335,12 @@ client.on('message', message => {
     message.react("🎉");
   }
 
-  // if (censor) {
-  //   if (USERS[4].id == message.author.id) {
-  //     message.delete();
-  //   }
-  // }
+  if (message.member.roles.has(prisonRole.id)) {
+    if (message.channel.id != PRISON_CHANNEL) {
+      message.delete();
+      return;
+    }
+  }
 
   // Check if command
   if (message.content.charAt(0) !== "!") return;
