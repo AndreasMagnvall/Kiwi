@@ -90,7 +90,7 @@ class Prison {
         user.cancelPrison = setTimeout(() => {
           user.votePrison = undefined;
           user.cancelPrison = undefined;
-          sendTemp(message.channel, "Voting for prison expired for user " + user.defaultNickname, 20000);
+          message.channel.send("Voting for prison expired for user " + user.defaultNickname);
         }, this.votingExpiration * 1000);
         if (this.votesRequired === 1) {
           clearTimeout(user.cancelPrison);
@@ -110,7 +110,7 @@ class Prison {
             user.votePrison = undefined;
             return this.jail(user);
           }
-          return "You voted for " + user.defaultNickname + ". " + (this.votesRequired - user.voteUnPrison.size) + " more vote(s) needed";
+          return "You voted for " + user.defaultNickname + ". " + (this.votesRequired - user.votePrison.size) + " more vote(s) needed";
         } else return "You have already voted! " + (this.votesRequired - user.votePrison.size) + " more vote(s) needed";
       }
     } else return "This user does not exist!";
