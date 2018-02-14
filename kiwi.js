@@ -100,6 +100,7 @@ class Prison {
           clearTimeout(user.cancelPrison);
           user.cancelPrison = undefined;
           user.votePrison = undefined;
+          users.get(user.id).inJail = true;
           return this.jail(user);
         }
         user.votePrison.add(message.author.id);
@@ -112,6 +113,7 @@ class Prison {
             clearTimeout(user.cancelPrison);
             user.cancelPrison = undefined;
             user.votePrison = undefined;
+            users.get(user.id).inJail = true;
             return this.jail(user);
           }
           return l.vote_prison1 + user.defaultNickname + ". " + (this.votesRequired - user.votePrison.size) + l.vote_prison2;
@@ -134,6 +136,7 @@ class Prison {
           clearTimeout(user.cancelUnPrison);
           user.cancelUnPrison = undefined;
           user.voteUnPrison = undefined;
+          users.get(user.id).inJail = undefined;
           return this.unJail(user);
         }
         user.voteUnPrison.add(message.author.id);
@@ -146,6 +149,7 @@ class Prison {
             clearTimeout(user.cancelUnPrison);
             user.cancelUnPrison = undefined;
             user.voteUnPrison = undefined;
+            users.get(user.id).inJail = undefined;
             return this.unJail(user);
           }
           return l.vote_prison1 + user.defaultNickname + ". " + (this.votesRequired - user.voteUnPrison.size) + l.vote_prison2;
@@ -333,15 +337,19 @@ class LogHolder {
 
 client.on('message', message => {
   // Code that runs on every message
+  let user = users.get(message.author.id);
+
   let r = Math.random();
   if (r <= 1 / 10000) {
     message.react("🎉");
   }
 
-  if (message.member.roles.has(prisonRole.id)) {
-    if (message.channel.id != PRISON_CHANNEL) {
-      message.delete();
-      return;
+  if (user !== undefined) {
+    if (user.inJail) {
+      if (message.channel.id != PRISON_CHANNEL) {
+        message.delete();
+        return;
+      }
     }
   }
 
