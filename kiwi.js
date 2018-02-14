@@ -226,7 +226,7 @@ client.on('ready', () => {
   defaultGuild = client.guilds.get(DEFAULT_SERVER);
   prisonRole = defaultGuild.roles.find('name', PRISON_ROLE);
 
-  notify = new JSONHandler(fs, 'notifications.json', (fileExists, loadSuccessful) => {
+  notify = new JSONHandler(fs, 'notifications.json', {scheduled:[]}, (fileExists, loadSuccessful) => {
     checkEntries = function(cb) {
       let d = new Date();
       let time = d.getTime();
@@ -258,7 +258,6 @@ client.on('ready', () => {
         notify.list += i + ": " + entry.timeString + " : " + entry.message + "\n";
       }
     }
-    updateList();
 
     addEntry = function(timeOrDateAndTime, message) {
       if (notify.obj.scheduled.length >= 5) return [false, l.notify_overflow];
@@ -291,21 +290,9 @@ client.on('ready', () => {
       updateList();
       return [true, res];
     }
-    if (!fileExists) {
-      console.log(l.notify_json_not_found);
-      notify.obj = {
-        scheduled : []
-      };
-      notify.save();
-    } else {
-      console.log(l.notify_json_found);
-      if (notify.obj.scheduled === undefined) {
-        notify.obj = {
-          scheduled : []
-        };
-        notify.save();
-      }
-    }
+    if (!fileExists) console.log(l.notify_json_not_found);
+    else console.log(l.notify_json_found);
+
     let channel = client.guilds.get(DEFAULT_SERVER)
       .channels.get(DEFAULT_CHANNEL);
     checkEntries((message) => {
@@ -315,6 +302,7 @@ client.on('ready', () => {
         description: message
       }});
     });
+    updateList();
   });
 });
 

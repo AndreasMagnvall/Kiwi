@@ -1,10 +1,16 @@
 module.exports = class JSONHandler {
-  constructor(fs, path, cb) {
+  constructor(fs, path, defaultObj, cb) {
     let instance = this;
     this.fs = fs;
     this.path = path;
     this.enc = 'utf8';
     this.obj = {};
+    this.defaultObj = defaultObj;
+    try {
+      this.default = JSON.stringify(defaultObj, null, 2);
+    } catch (e) {
+      this.default = '{}';
+    }
     if (cb) {
       this.load(cb);
     } else {
@@ -30,13 +36,20 @@ module.exports = class JSONHandler {
             instance.obj = JSON.parse(data);
             if (cb) cb(true,true);
           } catch(e) {
-            instance.obj = {};
-            instance.fs.writeFile(this.path,empty,this.enc);
+            instance.obj = instance.defaultObj;
+            instance.fs.writeFile(instance.path,
+              instance.default,
+              instance.enc,
+              instance.fn);
             if (cb) cb(true,false);
           }
         });
       } else {
-        instance.fs.writeFile(this.path,empty,this.enc);
+        instance.obj = instance.defaultObj;
+        instance.fs.writeFile(instance.path,
+          instance.default,
+          instance.enc,
+          instance.fn);
         if (cb) cb(false,false);
       }
     });
