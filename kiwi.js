@@ -5,6 +5,7 @@ const Discord = require('discord.js');
 const Lang = require('./lang.js');
 const JSONHandler = require('./jsonhandler.js');
 const Collection = require('./collection');
+const CollectionJSON = require('./collectionJSON');
 
 let language = new Lang('SV');
 let l = language.dict;
@@ -25,10 +26,11 @@ let tokens = new JSONHandler(fs, 'tokens.json', true, {
 LOGIN_TOKEN = tokens.obj.discord_bot_token;
 WOLFRAM_ALPHA_APP_ID = tokens.obj.wolfram_app_id;
 
-let userHandle = new JSONHandler(fs, 'users.json', true,
-   [
+let CITIZENS = new CollectionJSON(fs, 'users.json', true, [
+  [
+    "PasteIdHere",
     {
-      id : "PasteIdHere",
+      id : "PasteIdHereAlso",
       defaultNickname : "NameHere",
       defaultRoles : [
         "role1",
@@ -40,19 +42,17 @@ let userHandle = new JSONHandler(fs, 'users.json', true,
       ]
     }
   ]
-);
+]);
+
+setInterval(() => {
+  CITIZENS.save();
+}, 60000);
 
 let BOT_OWNER,
   DEFAULT_SERVER,
   DEFAULT_CHANNEL,
   PRISON_CHANNEL,
-  PRISON_ROLE,
-  USERS;
-
-USERS = new Collection();
-for (let i = 0; i < userHandle.obj.length; i++) {
-  USERS.set(userHandle.obj[i].id, userHandle.obj[i]);
-}
+  PRISON_ROLE;
 
 
 const client = new Discord.Client();
@@ -79,7 +79,7 @@ class Prison {
   }
 
   jailVote(userNickname, message) {
-    let user = USERS.search('defaultNickname', userNickname.toLowerCase());
+    let user = CITIZENS.search('defaultNickname', userNickname.toLowerCase());
     if (user !== undefined) {
       if (user.votePrison === undefined) {
         user.votePrison = new Set();
@@ -92,7 +92,7 @@ class Prison {
           clearTimeout(user.cancelPrison);
           user.cancelPrison = undefined;
           user.votePrison = undefined;
-          USERS.get(user.id).inJail = true;
+          CITIZENS.get(user.id).inJail = true;
           return this.jail(user);
         }
         user.votePrison.add(message.author.id);
@@ -105,7 +105,7 @@ class Prison {
             clearTimeout(user.cancelPrison);
             user.cancelPrison = undefined;
             user.votePrison = undefined;
-            USERS.get(user.id).inJail = true;
+            CITIZENS.get(user.id).inJail = true;
             return this.jail(user);
           }
           return l.vote_prison1 + user.defaultNickname + ". " + (this.votesRequired - user.votePrison.size) + l.vote_prison2;
@@ -115,7 +115,7 @@ class Prison {
   }
 
   unJailVote(userNickname, message) {
-    let user = USERS.search('defaultNickname', userNickname.toLowerCase());
+    let user = CITIZENS.search('defaultNickname', userNickname.toLowerCase());
     if (user !== undefined) {
       if (user.voteUnPrison === undefined) {
         user.voteUnPrison = new Set();
@@ -128,7 +128,7 @@ class Prison {
           clearTimeout(user.cancelUnPrison);
           user.cancelUnPrison = undefined;
           user.voteUnPrison = undefined;
-          USERS.get(user.id).inJail = undefined;
+          CITIZENS.get(user.id).inJail = undefined;
           return this.unJail(user);
         }
         user.voteUnPrison.add(message.author.id);
@@ -141,7 +141,7 @@ class Prison {
             clearTimeout(user.cancelUnPrison);
             user.cancelUnPrison = undefined;
             user.voteUnPrison = undefined;
-            USERS.get(user.id).inJail = undefined;
+            CITIZENS.get(user.id).inJail = undefined;
             return this.unJail(user);
           }
           return l.vote_prison1 + user.defaultNickname + ". " + (this.votesRequired - user.voteUnPrison.size) + l.vote_prison2;
@@ -158,7 +158,14 @@ class Prison {
 
       for (let i = 0; i < rawArr.length; i++) {
         let role = rawArr[i][1];
-        if (role.name !== "@everyone" && role.id != PRISON_ROLE.id) member.removeRole(role);
+        let isNonRole = false;
+        for (let i = 0; i < user.defaultNonRoles.length; i++) {
+          let roleC = DEFAULT_SERVER.roles.find("name", user.defaultNonRoles[i]);
+          if (role.id == roleC.id) isNonRole = true;
+        }
+        if (role.name !== "@everyone" && !isNonRole) {
+          member.removeRole(role);
+        }
       }
 
       for (let i = 0; i < user.defaultNonRoles.length; i++) {
@@ -316,7 +323,7 @@ class LogHolder {
 
 client.on('message', message => {
   // Code that runs on every message
-  let user = USERS.get(message.author.id);
+  let user = CITIZENS.get(message.author.id);
 
   let r = Math.random();
   if (r <= 1 / 10000) {
@@ -423,14 +430,14 @@ client.on('message', message => {
     message.delete();
   } else if (cmd === 'user-info') {
     if (msgTxt === "") {
-      let user = USERS.get(message.author.id);
+      let user = CITIZENS.get(message.author.id);
       if (user !== undefined) {
         send("```java\n" + JSON.stringify(user, null, 2) + "\n```");
       } else {
         send("```java\n{\n  \"" + l.user_info_not_registered + "\"\n}\n```");
       }
     } else {
-      let user = USERS.search('defaultNickname', msgTxt);
+      let user = CITIZENS.search('defaultNickname', msgTxt);
       if (user !== undefined) {
           send("```java\n" + JSON.stringify(user, null, 2) + "\n```");
       } else {
