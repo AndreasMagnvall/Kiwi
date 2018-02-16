@@ -99,7 +99,6 @@ module.exports = class JSONHandler {
 
   save(cb) {
     let instance = this;
-    console.log(instance.obj);
     let text = JSON.stringify(instance.obj, null, 2);
     if (cb) {
       instance.fs.writeFile(instance.path,text,instance.enc,cb);

@@ -47,7 +47,6 @@ module.exports = class customText {
       msg += nl;
       html += "<br>";
     }
-    console.log("Character count: " + msg.length)
     return msg;
   }
 
@@ -68,7 +67,6 @@ module.exports = class customText {
       msg += nl;
       html += "<br>";
     }
-    console.log("Character count: " + msg.length)
     return msg;
   }
 
@@ -331,8 +329,6 @@ module.exports = class customText {
   	converting_dict['8'] = ['┏━━━┓', '┃┏━┓┃', '┃┗━┛┃', '┃┏━┓┃', '┃┗━┛┃', '┗━━━┛'];
   	converting_dict['9'] = ['┏━━━┓', '┃┏━┓┃', '┃┗━┛┃', '┗━━┓┃', '┏━━┛┃', '┗━━━┛'];
 
-    console.log(txt);
-    console.log(converting_dict[txt]);
     return converting_dict[txt];
   }
 }
