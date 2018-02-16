@@ -48,6 +48,13 @@ setInterval(() => {
   CITIZENS.save();
 }, 60000);
 
+let CITIZENS_RAM = new Collection();
+let CITIZENS_ARR_STR = JSON.stringify(Array.from(CITIZENS));
+let CITIZENS_ARR = JSON.parse(CITIZENS_ARR_STR);
+for (let i = 0; i < CITIZENS_ARR.length; i++) {
+  CITIZENS_RAM.set(CITIZENS_ARR[i][0],CITIZENS_ARR[i][1]);
+}
+
 let BOT_OWNER,
   DEFAULT_SERVER,
   DEFAULT_CHANNEL,
@@ -80,72 +87,74 @@ class Prison {
 
   jailVote(userNickname, message) {
     let user = CITIZENS.search('defaultNickname', userNickname.toLowerCase());
+    let user_ram = CITIZENS_RAM.search('defaultNickname', userNickname.toLowerCase());
     if (user !== undefined) {
-      if (user.votePrison === undefined) {
-        user.votePrison = new Set();
-        user.cancelPrison = setTimeout(() => {
-          user.votePrison = undefined;
-          user.cancelPrison = undefined;
+      if (user_ram.votePrison === undefined) {
+        user_ram.votePrison = new Set();
+        user_ram.cancelPrison = setTimeout(() => {
+          user_ram.votePrison = undefined;
+          user_ram.cancelPrison = undefined;
           message.channel.send(l.vote_prison_expire + user.defaultNickname);
         }, this.votingExpiration * 1000);
         if (this.votesRequired === 1) {
-          clearTimeout(user.cancelPrison);
-          user.cancelPrison = undefined;
-          user.votePrison = undefined;
+          clearTimeout(user_ram.cancelPrison);
+          user_ram.cancelPrison = undefined;
+          user_ram.votePrison = undefined;
           CITIZENS.get(user.id).inJail = true;
           return this.jail(user);
         }
-        user.votePrison.add(message.author.id);
+        user_ram.votePrison.add(message.author.id);
         return l.vote_prison_start1 + user.defaultNickname + l.vote_prison_start2 + this.votingExpiration + l.vote_prison_start3 +
-          (this.votesRequired - user.votePrison.size) + l.vote_prison_start4;
+          (this.votesRequired - user_ram.votePrison.size) + l.vote_prison_start4;
       } else {
-        if(!user.votePrison.has(message.author.id)) {
-          user.votePrison.add(message.author.id);
-          if (user.votePrison.size >= this.votesRequired) {
-            clearTimeout(user.cancelPrison);
-            user.cancelPrison = undefined;
-            user.votePrison = undefined;
+        if(!user_ram.votePrison.has(message.author.id)) {
+          user_ram.votePrison.add(message.author.id);
+          if (user_ram.votePrison.size >= this.votesRequired) {
+            clearTimeout(user_ram.cancelPrison);
+            user_ram.cancelPrison = undefined;
+            user_ram.votePrison = undefined;
             CITIZENS.get(user.id).inJail = true;
             return this.jail(user);
           }
-          return l.vote_prison1 + user.defaultNickname + ". " + (this.votesRequired - user.votePrison.size) + l.vote_prison2;
-        } else return l.vote_prison3 + (this.votesRequired - user.votePrison.size) + l.vote_prison2;
+          return l.vote_prison1 + user.defaultNickname + ". " + (this.votesRequired - user_ram.votePrison.size) + l.vote_prison2;
+        } else return l.vote_prison3 + (this.votesRequired - user_ram.votePrison.size) + l.vote_prison2;
       }
     } else return l.user_not_found;
   }
 
   unJailVote(userNickname, message) {
     let user = CITIZENS.search('defaultNickname', userNickname.toLowerCase());
+    let user_ram = CITIZENS_RAM.search('defaultNickname', userNickname.toLowerCase());
     if (user !== undefined) {
-      if (user.voteUnPrison === undefined) {
-        user.voteUnPrison = new Set();
-        user.cancelUnPrison = setTimeout(() => {
-          user.voteUnPrison = undefined;
+      if (user_ram.voteUnPrison === undefined) {
+        user_ram.voteUnPrison = new Set();
+        user_ram.cancelUnPrison = setTimeout(() => {
+          user_ram.voteUnPrison = undefined;
           user.cancelUnPrison = undefined;
           message.channel.send(l.vote_prison_expire + user.defaultNickname);
         }, this.votingExpiration * 1000);
         if (this.votesRequired === 1) {
-          clearTimeout(user.cancelUnPrison);
-          user.cancelUnPrison = undefined;
-          user.voteUnPrison = undefined;
+          clearTimeout(user_ram.cancelUnPrison);
+          user_ram.cancelUnPrison = undefined;
+          user_ram.voteUnPrison = undefined;
           CITIZENS.get(user.id).inJail = undefined;
           return this.unJail(user);
         }
-        user.voteUnPrison.add(message.author.id);
+        user_ram.voteUnPrison.add(message.author.id);
         return l.vote_prison_start1 + user.defaultNickname + l.vote_prison_start2 + this.votingExpiration + l.vote_prison_start3 +
-            (this.votesRequired - user.voteUnPrison.size) + l.vote_prison_start4;
+            (this.votesRequired - user_ram.voteUnPrison.size) + l.vote_prison_start4;
       } else {
-        if(!user.voteUnPrison.has(message.author.id)) {
-          user.voteUnPrison.add(message.author.id);
-          if (user.voteUnPrison.size >= this.votesRequired) {
-            clearTimeout(user.cancelUnPrison);
-            user.cancelUnPrison = undefined;
-            user.voteUnPrison = undefined;
+        if(!user_ram.voteUnPrison.has(message.author.id)) {
+          user_ram.voteUnPrison.add(message.author.id);
+          if (user_ram.voteUnPrison.size >= this.votesRequired) {
+            clearTimeout(user_ram.cancelUnPrison);
+            user_ram.cancelUnPrison = undefined;
+            user_ram.voteUnPrison = undefined;
             CITIZENS.get(user.id).inJail = undefined;
             return this.unJail(user);
           }
-          return l.vote_prison1 + user.defaultNickname + ". " + (this.votesRequired - user.voteUnPrison.size) + l.vote_prison2;
-        } else return l.vote_prison3 + (this.votesRequired - user.voteUnPrison.size) + l.vote_prison2;
+          return l.vote_prison1 + user.defaultNickname + ". " + (this.votesRequired - user_ram.voteUnPrison.size) + l.vote_prison2;
+        } else return l.vote_prison3 + (this.votesRequired - user_ram.voteUnPrison.size) + l.vote_prison2;
       }
     } else return l.user_not_found;
   }
