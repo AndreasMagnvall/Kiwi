@@ -112,6 +112,4 @@ module.exports = class JSONHandler {
     let text = JSON.stringify(instance.obj, null, 2);
     instance.fs.writeFileSync(instance.path,text,instance.enc);
   }
-
-
 }
