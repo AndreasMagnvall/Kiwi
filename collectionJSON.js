@@ -1,4 +1,4 @@
-const JSONHandler = require('./jsonHandler.js');
+const JSONHandler = require('./jsonhandler.js');
 const Collection = require('./collection');
 
 module.exports = class collectionJSON extends Collection {
