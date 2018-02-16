@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "discord.js": "^11.2.1",
+    "prompt-sync": "^4.1.5",
     "wolfram-alpha": "^0.6.0",
     "xml2js": "^0.4.19"
   },

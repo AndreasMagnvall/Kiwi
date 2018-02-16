@@ -3,60 +3,58 @@ const LOGS = true;
 const DEBUG_LOGS = false;
 const Discord = require('discord.js');
 const Lang = require('./lang.js');
-let swedish = new Lang('SV');
-let l = swedish.dict;
-let tokens;
+const JSONHandler = require('./jsonhandler.js');
+const Collection = require('./collection');
 
-if (fs.existsSync('tokens.json')) {
-  tokens = JSON.parse(fs.readFileSync('tokens.json','utf8'));
-} else {
-  console.log(l.tokens_file_not_found);
-  let defaultTokenObj = {
-    discord_bot_token : "PasteTokenHere",
-    wolfram_app_id : "PasteAppIdHere",
-    bot_owner_discord_id : "PasteIdHere",
-    default_server_id : "PasteIdHere",
-    default_channel_id : "PasteIdHere",
-    prison_role_name : "NameHere",
-    prison_channel_id : "idHere",
-    users : [
-      {
-        id : "PasteIdHere",
-        defaultNickname : "NameHere",
-        defaultRoles : [
-          "role1",
-          "role2"
-        ],
-        defaultNonRoles : [
-          "role1",
-          "role2"
-        ]
-      }
-    ]
-  };
-  let defaultTokenString = JSON.stringify(defaultTokenObj, null, 2);
-  fs.writeFileSync('tokens.json',defaultTokenString);
-  console.log(l.token_info);
-  process.exit();
-}
-const LOGIN_TOKEN = tokens.discord_bot_token;
-const WOLFRAM_ALPHA_APP_ID = tokens.wolfram_app_id;
-const BOT_OWNER = tokens.bot_owner_discord_id;
-const USERS = tokens.users;
-const DEFAULT_SERVER = tokens.default_server_id;
-const DEFAULT_CHANNEL = tokens.default_channel_id;
-const PRISON_CHANNEL = tokens.prison_channel_id;
-const PRISON_ROLE = tokens.prison_role_name;
-let defaultGuild;
-let prisonRole;
-let prisonChannel;
-let users = new Map();
-for (let i = 0; i < tokens.users.length; i++) {
-  users.set(tokens.users[i].id, tokens.users[i]);
+let language = new Lang('SV');
+let l = language.dict;
+
+let LOGIN_TOKEN,
+  WOLFRAM_ALPHA_APP_ID;
+
+let tokens = new JSONHandler(fs, 'tokens.json', true, {
+  discord_bot_token : "PasteTokenHere",
+  wolfram_app_id : "PasteAppIdHere",
+  bot_owner_discord_id : "PasteIdHere",
+  default_server_id : "PasteIdHere",
+  default_channel_id : "PasteIdHere",
+  prison_role_name : "NameHere",
+  prison_channel_id : "idHere"
+});
+
+LOGIN_TOKEN = tokens.obj.discord_bot_token;
+WOLFRAM_ALPHA_APP_ID = tokens.obj.wolfram_app_id;
+
+let userHandle = new JSONHandler(fs, 'users.json', true,
+   [
+    {
+      id : "PasteIdHere",
+      defaultNickname : "NameHere",
+      defaultRoles : [
+        "role1",
+        "role2"
+      ],
+      defaultNonRoles : [
+        "role1",
+        "role2"
+      ]
+    }
+  ]
+);
+
+let BOT_OWNER,
+  DEFAULT_SERVER,
+  DEFAULT_CHANNEL,
+  PRISON_CHANNEL,
+  PRISON_ROLE,
+  USERS;
+
+USERS = new Collection();
+for (let i = 0; i < userHandle.obj.length; i++) {
+  USERS.set(userHandle.obj[i].id, userHandle.obj[i]);
 }
 
-const parseXML = require('xml2js').parseString;
-const querystring = require('querystring');
+
 const client = new Discord.Client();
 const WolframModule = require('./wolfram');
 
@@ -66,28 +64,22 @@ const customText = require('./customText');
 let customTxt = new customText("▰","▱");
 
 // Notifications
-const JSONHandler = require('./jsonhandler.js');
-let notify;
-let checkEntries;
-let addEntry;
-let updateList;
+let notify,
+  checkEntries,
+  addEntry,
+  updateList;
 
 // Prison
 let prison;
 class Prison {
   constructor(client) {
     this.client = client;
-    this.users = new Map();
-    for (let i = 0; i < USERS.length; i++) {
-      let name = USERS[i].defaultNickname.toLowerCase();
-      this.users.set(name, USERS[i]);
-    }
     this.votesRequired = 3;
     this.votingExpiration = 60;
   }
 
   jailVote(userNickname, message) {
-    let user = this.users.get(userNickname.toLowerCase());
+    let user = USERS.search('defaultNickname', userNickname.toLowerCase());
     if (user !== undefined) {
       if (user.votePrison === undefined) {
         user.votePrison = new Set();
@@ -100,7 +92,7 @@ class Prison {
           clearTimeout(user.cancelPrison);
           user.cancelPrison = undefined;
           user.votePrison = undefined;
-          users.get(user.id).inJail = true;
+          USERS.get(user.id).inJail = true;
           return this.jail(user);
         }
         user.votePrison.add(message.author.id);
@@ -113,7 +105,7 @@ class Prison {
             clearTimeout(user.cancelPrison);
             user.cancelPrison = undefined;
             user.votePrison = undefined;
-            users.get(user.id).inJail = true;
+            USERS.get(user.id).inJail = true;
             return this.jail(user);
           }
           return l.vote_prison1 + user.defaultNickname + ". " + (this.votesRequired - user.votePrison.size) + l.vote_prison2;
@@ -123,7 +115,7 @@ class Prison {
   }
 
   unJailVote(userNickname, message) {
-    let user = this.users.get(userNickname.toLowerCase());
+    let user = USERS.search('defaultNickname', userNickname.toLowerCase());
     if (user !== undefined) {
       if (user.voteUnPrison === undefined) {
         user.voteUnPrison = new Set();
@@ -136,7 +128,7 @@ class Prison {
           clearTimeout(user.cancelUnPrison);
           user.cancelUnPrison = undefined;
           user.voteUnPrison = undefined;
-          users.get(user.id).inJail = undefined;
+          USERS.get(user.id).inJail = undefined;
           return this.unJail(user);
         }
         user.voteUnPrison.add(message.author.id);
@@ -149,7 +141,7 @@ class Prison {
             clearTimeout(user.cancelUnPrison);
             user.cancelUnPrison = undefined;
             user.voteUnPrison = undefined;
-            users.get(user.id).inJail = undefined;
+            USERS.get(user.id).inJail = undefined;
             return this.unJail(user);
           }
           return l.vote_prison1 + user.defaultNickname + ". " + (this.votesRequired - user.voteUnPrison.size) + l.vote_prison2;
@@ -159,19 +151,18 @@ class Prison {
   }
 
   jail(user) {
-    let guild = this.client.guilds.get(DEFAULT_SERVER);
-    let member = guild.members.get(user.id);
+    let member = DEFAULT_SERVER.members.get(user.id);
     if (user !== undefined) {
       let rawArr = Array.from(member.roles);
       let roleArr = new Array();
 
       for (let i = 0; i < rawArr.length; i++) {
         let role = rawArr[i][1];
-        if (role.name !== "@everyone") member.removeRole(role);
+        if (role.name !== "@everyone" && role.id != PRISON_ROLE.id) member.removeRole(role);
       }
 
       for (let i = 0; i < user.defaultNonRoles.length; i++) {
-        let role = guild.roles.find("name", user.defaultNonRoles[i]);
+        let role = DEFAULT_SERVER.roles.find("name", user.defaultNonRoles[i]);
         member.addRole(role);
       }
 
@@ -180,15 +171,14 @@ class Prison {
   }
 
   unJail(user) {
-    let guild = this.client.guilds.get(DEFAULT_SERVER);
-    let member = guild.members.get(user.id);
+    let member = DEFAULT_SERVER.members.get(user.id);
     for (let i = 0; i < user.defaultRoles.length; i++) {
-      let role = guild.roles.find("name", user.defaultRoles[i]);
+      let role = DEFAULT_SERVER.roles.find("name", user.defaultRoles[i]);
       member.addRole(role);
     }
 
     for (let i = 0; i < user.defaultNonRoles.length; i++) {
-      let role = guild.roles.find("name", user.defaultNonRoles[i]);
+      let role = DEFAULT_SERVER.roles.find("name", user.defaultNonRoles[i]);
       member.removeRole(role);
     }
     return user.defaultNickname + l.vote_prison5;
@@ -223,10 +213,13 @@ client.on('ready', () => {
   log(l.ready_message);
 
   prison = new Prison(client);
-  defaultGuild = client.guilds.get(DEFAULT_SERVER);
-  prisonRole = defaultGuild.roles.find('name', PRISON_ROLE);
+  DEFAULT_SERVER = client.guilds.get(tokens.obj.default_server_id);
+  PRISON_ROLE = DEFAULT_SERVER.roles.find('name', tokens.obj.prison_role_name);
+  PRISON_CHANNEL = DEFAULT_SERVER.channels.get(tokens.obj.prison_channel_id);
+  DEFAULT_CHANNEL = DEFAULT_SERVER.channels.get(tokens.obj.default_channel_id);
 
-  notify = new JSONHandler(fs, 'notifications.json', {scheduled:[]}, (fileExists, loadSuccessful) => {
+
+  notify = new JSONHandler(fs, 'notifications.json', false, {scheduled:[]}, (fileExists, loadSuccessful) => {
     checkEntries = function(cb) {
       let d = new Date();
       let time = d.getTime();
@@ -293,10 +286,8 @@ client.on('ready', () => {
     if (!fileExists) console.log(l.notify_json_not_found);
     else console.log(l.notify_json_found);
 
-    let channel = client.guilds.get(DEFAULT_SERVER)
-      .channels.get(DEFAULT_CHANNEL);
     checkEntries((message) => {
-      channel.send({embed: {
+      DEFAULT_CHANNEL.send({embed: {
         color: 0xFFEEA0,
         title: l.notify_notification_title,
         description: message
@@ -325,7 +316,7 @@ class LogHolder {
 
 client.on('message', message => {
   // Code that runs on every message
-  let user = users.get(message.author.id);
+  let user = USERS.get(message.author.id);
 
   let r = Math.random();
   if (r <= 1 / 10000) {
@@ -334,7 +325,7 @@ client.on('message', message => {
 
   if (user !== undefined) {
     if (user.inJail) {
-      if (message.channel.id != PRISON_CHANNEL) {
+      if (message.channel.id != PRISON_CHANNEL.id) {
         message.delete();
         return;
       }
@@ -432,22 +423,19 @@ client.on('message', message => {
     message.delete();
   } else if (cmd === 'user-info') {
     if (msgTxt === "") {
-      let uuu = users.get(message.author.id);
-      if (uuu !== undefined) {
-        send("```java\n" + JSON.stringify(uuu, null, 2) + "\n```");
+      let user = USERS.get(message.author.id);
+      if (user !== undefined) {
+        send("```java\n" + JSON.stringify(user, null, 2) + "\n```");
       } else {
         send("```java\n{\n  \"" + l.user_info_not_registered + "\"\n}\n```");
       }
     } else {
-      let found = false;
-      for (let i = 0; i < USERS.length; i++) {
-        if (USERS[i].defaultNickname.toLowerCase() === msgTxt) {
-          send("```java\n" + JSON.stringify(USERS[i], null, 2) + "\n```");
-          found = true;
-          break;
-        }
+      let user = USERS.search('defaultNickname', msgTxt);
+      if (user !== undefined) {
+          send("```java\n" + JSON.stringify(user, null, 2) + "\n```");
+      } else {
+        send("```java\n{\n  \"" + l.user_info_not_registered + "\"\n}\n```");
       }
-      if (!found) send("```java\n{\n  \"" + l.user_info_not_registered + "\"\n}\n```");
     }
   } else if (cmd === 'notify') {
     let message;

@@ -1,6 +1,10 @@
+let prompt = require('prompt-sync')();
+
 module.exports = class JSONHandler {
-  constructor(fs, path, defaultObj, cb) {
+  constructor(fs, path, sync, defaultObj, cb) {
     let instance = this;
+
+    this.sync = sync;
     this.fs = fs;
     this.path = path;
     this.enc = 'utf8';
@@ -11,7 +15,9 @@ module.exports = class JSONHandler {
     } catch (e) {
       this.default = '{}';
     }
-    if (cb) {
+    if (sync) {
+      this.loadSync();
+    } else if (cb) {
       this.load(cb);
     } else {
       this.load();
@@ -21,7 +27,6 @@ module.exports = class JSONHandler {
 
   load(cb) {
     let instance = this;
-    let empty = JSON.stringify({});
     this.fs.stat(this.path,(err, stats) => {
       let isFile;
       if (err) {
@@ -36,12 +41,20 @@ module.exports = class JSONHandler {
             instance.obj = JSON.parse(data);
             if (cb) cb(true,true);
           } catch(e) {
-            instance.obj = instance.defaultObj;
-            instance.fs.writeFile(instance.path,
-              instance.default,
-              instance.enc,
-              instance.fn);
-            if (cb) cb(true,false);
+            var res = prompt('Error reading \"' + instance.path + '\", should the file be overwritten with the default file? Y/N');
+
+            if (res.toLowerCase() === 'y') {
+              instance.obj = instance.defaultObj;
+              instance.fs.writeFile(instance.path,
+                instance.default,
+                instance.enc,
+                instance.fn);
+              console.log('Overwriting file...');
+              if (cb) cb(true,false);
+            } else {
+              console.log('Exiting... Fix ' + instance.path);
+              process.exit();
+            }
           }
         });
       } else {
@@ -55,6 +68,35 @@ module.exports = class JSONHandler {
     });
   }
 
+  loadSync() {
+    let instance = this;
+    if(instance.fs.existsSync(instance.path)) {
+      let data = instance.fs.readFileSync(instance.path, instance.enc);
+      try {
+        instance.obj = JSON.parse(data);
+      } catch(e) {
+        console.log(e);
+        var res = prompt('Error reading \"' + instance.path + '\", should the file be overwritten with the default file? Y/N');
+
+        if (res.toLowerCase() === 'y') {
+          instance.obj = instance.defaultObj;
+          instance.fs.writeFileSync(instance.path,
+            instance.default,
+            instance.enc);
+          console.log('Overwriting file...');
+        } else {
+          console.log('Exiting... Fix ' + instance.path);
+          process.exit();
+        }
+      }
+    } else {
+      instance.obj = instance.defaultObj;
+      instance.fs.writeFileSync(instance.path,
+        instance.default,
+        instance.enc);
+    }
+  }
+
   save(cb) {
     let instance = this;
     let text = JSON.stringify(instance.obj, null, 2);
@@ -64,4 +106,12 @@ module.exports = class JSONHandler {
       instance.fs.writeFile(instance.path,text,instance.enc,instance.fn);
     }
   }
+
+  saveSync() {
+    let instance = this;
+    let text = JSON.stringify(instance.obj, null, 2);
+    instance.fs.writeFileSync(instance.path,text,instance.enc);
+  }
+
+
 }
