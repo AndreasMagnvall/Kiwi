@@ -14,47 +14,46 @@ const WolframModule = require('./wolfram');
 const customText = require('./customText');
 
 /*
-  GLOBAL VARIABLES
-*/
-
-  // Discord
-let client,
-  LOGIN_TOKEN,
-  BOT_OWNER,
-  DEFAULT_SERVER,
-  DEFAULT_CHANNEL,
-  tokens,
-
-  // Wolframalpha
-  wolfram,
-  WOLFRAM_ALPHA_APP_ID,
-
-  // Language
-  language, l,
-
-  // Users list
-  CITIZENS,
-  CITIZENS_RAM,
-
-  // Text generator
-  customTxt,
-
-  // Prison system
-  PRISON_CHANNEL,
-  PRISON_ROLE,
-  prison,
-  Prison,
-
-  // Notifications
-  notify,
-  checkEntries,
-  addEntry,
-  updateList;
-
-/*
   THE SETUP FUNCTION, RUNS ON STARTUP
 */
-async function setup() {
+module.exports = async function botStartup() {
+  /*
+    VARIABLES
+  */
+
+    // Discord
+  let client,
+    LOGIN_TOKEN,
+    BOT_OWNER,
+    DEFAULT_SERVER,
+    DEFAULT_CHANNEL,
+    tokens,
+
+    // Wolframalpha
+    wolfram,
+    WOLFRAM_ALPHA_APP_ID,
+
+    // Language
+    language, l,
+
+    // Users list
+    CITIZENS,
+    CITIZENS_RAM,
+
+    // Text generator
+    customTxt,
+
+    // Prison system
+    PRISON_CHANNEL,
+    PRISON_ROLE,
+    prison,
+
+    // Notifications
+    notify,
+    checkEntries,
+    addEntry,
+    updateList;
+
   language = new Lang('SV');
   l = language.dict;
 
@@ -545,4 +544,4 @@ async function setup() {
   client.login(LOGIN_TOKEN);
 }
 
-setup();
+botStartup();
