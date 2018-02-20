@@ -2,7 +2,43 @@
 <head>
   <script src="main.js" charset="utf-8"></script>
   <link rel="stylesheet" href="styles.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+  <script>
+    var socket;
+    $(function () {
+      socket = io();
+
+      socket.on('log', (msg) => {
+        $("#log").append("<div><p>" + msg + "</p></div>");
+        var objDiv = document.getElementById("log");
+        objDiv.scrollTop = objDiv.scrollHeight;
+      });
+
+      socket.on('init-logs', (data) => {
+        $("#log").html(data);
+        var objDiv = document.getElementById("log");
+        objDiv.scrollTop = objDiv.scrollHeight;
+      });
+
+      $("#start").click(() => {
+        socket.emit('start');
+      });
+
+      $("#stop").click(() => {
+        socket.emit('stop');
+      });
+
+      $("#clear").click(() => {
+        $("#log").html("");
+        socket.emit('clear');
+      });
+    });
+  </script>
 </head>
 <body>
-
+  <button id="start">Start</button>
+  <button id="stop">Stop</button>
+  <button id="clear">Clear</button>
+  <div id="log"></div>
 </body>

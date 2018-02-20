@@ -1,0 +1,17 @@
+#log div p {
+  font-family: Consolas, Lucida Console, Courier New, monospace;
+  margin: 5px;
+}
+
+#log div {
+  border-bottom: 1px solid rgb(240, 240, 240);
+}
+
+#log:last-child {
+  border-bottom: none;
+}
+
+#log {
+  margin-top: 20px;
+  border: 1px solid rgb(240, 240, 240);
+}
