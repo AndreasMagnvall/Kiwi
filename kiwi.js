@@ -52,3 +52,7 @@ http.listen(2018, function() {
   lb.log('Server started');
   lb.send();
 });
+
+log("Bot starting...");
+bot.start();
+on = true;
