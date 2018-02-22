@@ -34,6 +34,11 @@
         $("#log").html("");
         socket.emit('clear');
       });
+
+      $("#full-reset").click(() => {
+        $("#log").html("");
+        socket.emit('full-reset');
+      });
     });
   </script>
 </head>
@@ -41,5 +46,6 @@
   <button id="start">Start</button>
   <button id="stop">Stop</button>
   <button id="clear">Clear</button>
+  <button id="full-reset">Full-reset (WARNING)</button>
   <div id="log"></div>
 </body>
