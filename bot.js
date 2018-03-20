@@ -536,6 +536,7 @@ module.exports = class Bot {
                 send("Du måste vänta " + minutes + " min och " + seconds + " sekunder!");
               }
             } else {
+              user.inJail = undefined;
               prison.unJail(user);
               send(resMsg);
             }
