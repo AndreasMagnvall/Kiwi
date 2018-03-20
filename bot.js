@@ -123,6 +123,7 @@ module.exports = class Bot {
       }
 
       jailVote(userNickname, message) {
+        if (!CITIZENS.has(message.author.id)) return "Endast medlemmar kan rösta!";
         let user = CITIZENS.search('defaultNickname', userNickname.toLowerCase());
         let user_ram = CITIZENS_RAM.search('defaultNickname', userNickname.toLowerCase());
         if (user !== undefined) {
@@ -160,6 +161,7 @@ module.exports = class Bot {
       }
 
       unJailVote(userNickname, message) {
+        if (!CITIZENS.has(message.author.id)) return "Endast medlemmar kan rösta!";
         let user = CITIZENS.search('defaultNickname', userNickname.toLowerCase());
         let user_ram = CITIZENS_RAM.search('defaultNickname', userNickname.toLowerCase());
         if (user !== undefined) {
