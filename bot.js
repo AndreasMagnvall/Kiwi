@@ -546,7 +546,7 @@ module.exports = class Bot {
             prison.unJail(user);
             send(resMsg);
           }
-        }
+        } else send("Du måste vara medlem för att använda det här kommandot!");
         lb.send();
       }
     });
