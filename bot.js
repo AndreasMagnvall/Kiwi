@@ -137,7 +137,7 @@ module.exports = class Bot {
               clearTimeout(user_ram.cancelPrison);
               user_ram.cancelPrison = undefined;
               user_ram.votePrison = undefined;
-              CITIZENS.get(user.id).inJail = true;
+              CITIZENS.get(user.id).inJail = {state:true, duration:Date.now()};
               return this.jail(user);
             }
             user_ram.votePrison.add(message.author.id);
@@ -150,7 +150,7 @@ module.exports = class Bot {
                 clearTimeout(user_ram.cancelPrison);
                 user_ram.cancelPrison = undefined;
                 user_ram.votePrison = undefined;
-                CITIZENS.get(user.id).inJail = true;
+                CITIZENS.get(user.id).inJail = {state:true, duration:Date.now()};
                 return this.jail(user);
               }
               return l.vote_prison1 + user.defaultNickname + ". " + (this.votesRequired - user_ram.votePrison.size) + l.vote_prison2;
@@ -517,6 +517,32 @@ module.exports = class Bot {
       } else if (cmd === 'pardon') {
         if (msgArgs.length > 1) {
           message.channel.send(prison.unJailVote(msgArgs[1], message));
+        }
+        lb.send();
+      } else if (cmd === 'revive') {
+        let resMsg = "Dina roller har återställts!";
+        if (user !== undefined) {
+          if (user.inJail) {
+            if (user.inJail.duration) {
+              let timeInJail = Date.now() - user.inJail.duration;
+              let stay = 5*60*1000;
+              if (timeInJail > stay) {
+                user.inJail = undefined;
+                prison.unJail(user);
+                send(resMsg);
+              } else {
+                let minutes = Math.floor((stay - timeInJail) / (1000*60));
+                let seconds = Math.floor((stay - timeInJail) / 1000) % 60;
+                send("Du måste vänta " + minutes + " min och " + seconds + " sekunder!");
+              }
+            } else {
+              prison.unJail(user);
+              send(resMsg);
+            }
+          } else {
+            prison.unJail(user);
+            send(resMsg);
+          }
         }
         lb.send();
       }
