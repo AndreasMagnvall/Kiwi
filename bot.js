@@ -386,6 +386,10 @@ module.exports = class Bot {
       lb.log("--------");
       lb.log(new Date());
       lb.log("User " + message.author.username + " typed \"" + message.content + "\" in " + message.channel.name + ".");
+
+      // If user is typing a DM, ignore command
+      if (!message.member) return send("Du måste vara inne på en server för att köra kommandon!");
+
       if (cmd === 'help-kiwi') {
         message.channel.send({embed: {
           color: 3447003,
