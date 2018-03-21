@@ -25,7 +25,8 @@ module.exports = class Lang {
                         "**!notify-list**   Visar en lista på de notiser som väntar.\n"+
                         "**!notify-remove <index>**   Tar bort en notis.\n"+
                         "**!imprison <name>**   Fängsla en person på servern.\n"+
-                        "**!pardon <name>**   Ta bort en person från fängelset.\n",
+                        "**!pardon <name>**   Ta bort en person från fängelset.\n"+
+                        "**!revive**   Återställ dina roller!\n",
 
           vote_prison_expire : "Fängelseröstningen avbröts för ",
           vote_prison1 : "Du röstade för ",
