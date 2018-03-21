@@ -531,7 +531,7 @@ module.exports = class Bot {
           if (user.inJail) {
             if (user.inJail.duration) {
               let timeInJail = Date.now() - user.inJail.duration;
-              let stay = 5*60*1000;
+              let stay = 10*60*1000;
               if (timeInJail > stay) {
                 user.inJail = undefined;
                 prison.unJail(user);
