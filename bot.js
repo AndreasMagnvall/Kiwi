@@ -12,12 +12,14 @@ const Collection = require('./collection');
 const CollectionJSON = require('./collectionJSON');
 const WolframModule = require('./wolfram');
 const customText = require('./customText');
+//const cryptoTrack = require("crypto-track");
+const CoinMarketCap = require('coinmarketcap-api');
 
 /*
   VARIABLES
 */
 
-  // Discord
+// Discord
 let client,
   LOGIN_TOKEN,
   BOT_OWNER,
@@ -65,14 +67,19 @@ module.exports = class Bot {
     language = new Lang('SV');
     l = language.dict;
 
+    //let crypto = new cryptoTrack('SEK', ['bitcoin', 'etherium']);
+    const crypto = new CoinMarketCap();
+
+    crypto.btc = true;
+
     tokens = new JSONHandler(fs, 'tokens.json', true, {
-      discord_bot_token : "PasteTokenHere",
-      wolfram_app_id : "PasteAppIdHere",
-      bot_owner_discord_id : "PasteIdHere",
-      default_server_id : "PasteIdHere",
-      default_channel_id : "PasteIdHere",
-      prison_role_name : "NameHere",
-      prison_channel_id : "idHere"
+      discord_bot_token: "PasteTokenHere",
+      wolfram_app_id: "PasteAppIdHere",
+      bot_owner_discord_id: "PasteIdHere",
+      default_server_id: "PasteIdHere",
+      default_channel_id: "PasteIdHere",
+      prison_role_name: "NameHere",
+      prison_channel_id: "idHere"
     });
 
     LOGIN_TOKEN = tokens.obj.discord_bot_token;
@@ -82,13 +89,13 @@ module.exports = class Bot {
       [
         "PasteIdHere",
         {
-          id : "PasteIdHereAlso",
-          defaultNickname : "NameHere",
-          defaultRoles : [
+          id: "PasteIdHereAlso",
+          defaultNickname: "NameHere",
+          defaultRoles: [
             "role1",
             "role2"
           ],
-          defaultNonRoles : [
+          defaultNonRoles: [
             "role1",
             "role2"
           ]
@@ -104,7 +111,7 @@ module.exports = class Bot {
     let citizensArrStr = JSON.stringify(Array.from(CITIZENS));
     let citizensArr = JSON.parse(citizensArrStr);
     for (let i = 0; i < citizensArr.length; i++) {
-      CITIZENS_RAM.set(citizensArr[i][0],citizensArr[i][1]);
+      CITIZENS_RAM.set(citizensArr[i][0], citizensArr[i][1]);
     }
 
 
@@ -113,7 +120,7 @@ module.exports = class Bot {
 
     wolfram = new WolframModule(WOLFRAM_ALPHA_APP_ID, (msg) => this.lm.log(msg));
 
-    customTxt = new customText("▰","▱");
+    customTxt = new customText("▰", "▱");
 
     class Prison {
       constructor(client) {
@@ -138,20 +145,26 @@ module.exports = class Bot {
               clearTimeout(user_ram.cancelPrison);
               user_ram.cancelPrison = undefined;
               user_ram.votePrison = undefined;
-              CITIZENS.get(user.id).inJail = {state:true, duration:Date.now()};
+              CITIZENS.get(user.id).inJail = {
+                state: true,
+                duration: Date.now()
+              };
               return this.jail(user);
             }
             user_ram.votePrison.add(message.author.id);
             return l.vote_prison_start1 + user.defaultNickname + l.vote_prison_start2 + this.votingExpiration + l.vote_prison_start3 +
               (this.votesRequired - user_ram.votePrison.size) + l.vote_prison_start4;
           } else {
-            if(!user_ram.votePrison.has(message.author.id)) {
+            if (!user_ram.votePrison.has(message.author.id)) {
               user_ram.votePrison.add(message.author.id);
               if (user_ram.votePrison.size >= this.votesRequired) {
                 clearTimeout(user_ram.cancelPrison);
                 user_ram.cancelPrison = undefined;
                 user_ram.votePrison = undefined;
-                CITIZENS.get(user.id).inJail = {state:true, duration:Date.now()};
+                CITIZENS.get(user.id).inJail = {
+                  state: true,
+                  duration: Date.now()
+                };
                 return this.jail(user);
               }
               return l.vote_prison1 + user.defaultNickname + ". " + (this.votesRequired - user_ram.votePrison.size) + l.vote_prison2;
@@ -181,9 +194,9 @@ module.exports = class Bot {
             }
             user_ram.voteUnPrison.add(message.author.id);
             return l.vote_prison_start1 + user.defaultNickname + l.vote_prison_start2 + this.votingExpiration + l.vote_prison_start3 +
-                (this.votesRequired - user_ram.voteUnPrison.size) + l.vote_prison_start4;
+              (this.votesRequired - user_ram.voteUnPrison.size) + l.vote_prison_start4;
           } else {
-            if(!user_ram.voteUnPrison.has(message.author.id)) {
+            if (!user_ram.voteUnPrison.has(message.author.id)) {
               user_ram.voteUnPrison.add(message.author.id);
               if (user_ram.voteUnPrison.size >= this.votesRequired) {
                 clearTimeout(user_ram.cancelUnPrison);
@@ -241,18 +254,20 @@ module.exports = class Bot {
     }
 
     // Get date string
-    Number.prototype.padLeft = function(base,chr){
-        var  len = (String(base || 10).length - String(this).length)+1;
-        return len > 0? new Array(len).join(chr || '0')+this : this;
+    Number.prototype.padLeft = function(base, chr) {
+      var len = (String(base || 10).length - String(this).length) + 1;
+      return len > 0 ? new Array(len).join(chr || '0') + this : this;
     }
+
     function timeToString(time) {
       let d = new Date();
       d.setTime(time);
-      return  [d.getFullYear(),
-         (d.getMonth()+1).padLeft(),
-         d.getDate().padLeft()].join('-') +' ' +
-        [d.getHours().padLeft(),
-         d.getMinutes().padLeft()].join(':');
+      return [d.getFullYear(),
+        (d.getMonth() + 1).padLeft(),
+        d.getDate().padLeft()
+      ].join('-') + ' ' + [d.getHours().padLeft(),
+        d.getMinutes().padLeft()
+      ].join(':');
     }
 
     client.on('ready', () => {
@@ -271,14 +286,16 @@ module.exports = class Bot {
       DEFAULT_CHANNEL = DEFAULT_SERVER.channels.get(tokens.obj.default_channel_id);
 
 
-      notify = new JSONHandler(fs, 'notifications.json', false, {scheduled:[]}, (fileExists, loadSuccessful) => {
+      notify = new JSONHandler(fs, 'notifications.json', false, {
+        scheduled: []
+      }, (fileExists, loadSuccessful) => {
         checkEntries = function(cb) {
           let d = new Date();
           let time = d.getTime();
           for (let i = notify.obj.scheduled.length; i >= 0; i--) {
             let entry = notify.obj.scheduled[i];
             if (entry === undefined) continue;
-            if ((entry.time-30000) <= time) {
+            if ((entry.time - 30000) <= time) {
               notify.obj.scheduled.splice(i, 1);
               if (cb) {
                 cb(entry.message);
@@ -289,17 +306,40 @@ module.exports = class Bot {
             }
           }
           updateList();
-          setTimeout(() => {notify.save()}, 10000);
+          setTimeout(() => {
+            notify.save()
+          }, 10000);
           // Calculate next check
           setTimeout(() => {
             checkEntries(cb);
-          }, 60000-((d.getSeconds())*1000));
+          }, 60000 - ((d.getSeconds()) * 1000));
         }
+
+        setTimeout(() => {
+          // Update cryptocurrencies
+          if (crypto.btc) {
+            crypto.btc = false;
+            crypto.getTicker({
+              convert: 'SEK',
+              currency: 'bitcoin'
+            }).then((data) => {
+              client.user.setGame('BTC: +' + (Number(data[0].percent_change_24h).toFixed(2)) + '%');
+            }).catch(console.log);
+          } else {
+            crypto.btc = true;
+            crypto.getTicker({
+              convert: 'SEK',
+              currency: 'ethereum'
+            }).then((data) => {
+              client.user.setGame('ETH: +' + (Number(data[0].percent_change_24h).toFixed(2)) + '%');
+            }).catch(console.log);
+          }
+        }, 10000);
 
         updateList = function() {
           notify.list = l.notify_header;
           for (let i = 0; i < notify.obj.scheduled.length; i++) {
-            let entry =  notify.obj.scheduled[i];
+            let entry = notify.obj.scheduled[i];
             notify.list += i + ": " + entry.timeString + " : " + entry.message + "\n";
           }
         }
@@ -327,9 +367,9 @@ module.exports = class Bot {
           } else return [false, timeError];
           let timeString = timeToString(d.getTime());
           notify.obj.scheduled.push({
-            message : message,
-            time : d.getTime(),
-            timeString : timeString
+            message: message,
+            time: d.getTime(),
+            timeString: timeString
           });
           let res = l.notify_set + timeString + " : " + message;
           updateList();
@@ -339,11 +379,13 @@ module.exports = class Bot {
         else this.lm.log(l.notify_json_found);
 
         checkEntries((message) => {
-          DEFAULT_CHANNEL.send({embed: {
-            color: 0xFFEEA0,
-            title: l.notify_notification_title,
-            description: message
-          }});
+          DEFAULT_CHANNEL.send({
+            embed: {
+              color: 0xFFEEA0,
+              title: l.notify_notification_title,
+              description: message
+            }
+          });
         });
         updateList();
       });
@@ -391,19 +433,23 @@ module.exports = class Bot {
       if (!message.member) return send("Du måste vara inne på en server för att köra kommandon!");
 
       if (cmd === 'help-kiwi') {
-        message.channel.send({embed: {
-          color: 3447003,
-          title: l.help_info_title,
-          description: l.help_info
-        }}).then(() => lb.send());
+        message.channel.send({
+          embed: {
+            color: 3447003,
+            title: l.help_info_title,
+            description: l.help_info
+          }
+        }).then(() => lb.send());
 
       } else if (cmd === 'solve') {
         let equation = msgTxt;
         let thinkingMessage = null;
-        message.channel.send({embed: {
-          color: 3447003,
-          description: l.wolfram_thinking
-        }}).then(function(msg) {
+        message.channel.send({
+          embed: {
+            color: 3447003,
+            description: l.wolfram_thinking
+          }
+        }).then(function(msg) {
           if (thinkingMessage == null) {
             thinkingMessage = msg;
           } else {
@@ -412,10 +458,13 @@ module.exports = class Bot {
         });
         wolfram.getSolutions(equation, (msg) => lb.log(msg), function(data) {
           if (thinkingMessage != null) {
-            thinkingMessage.edit({embed: {
-              color: 3447003,
-              description: setMessage()
-            }})
+            thinkingMessage.edit({
+              embed: {
+                color: 3447003,
+                description: setMessage()
+              }
+            })
+
             function setMessage() {
               var solutionsCount = data.length;
               if (solutionsCount == 1) {
@@ -473,7 +522,7 @@ module.exports = class Bot {
         } else {
           let user = CITIZENS.search('defaultNickname', msgTxt);
           if (user !== undefined) {
-              send("```java\n" + JSON.stringify(user, null, 2) + "\n```");
+            send("```java\n" + JSON.stringify(user, null, 2) + "\n```");
           } else {
             send("```java\n{\n  \"" + l.user_info_not_registered + "\"\n}\n```");
           }
@@ -531,13 +580,13 @@ module.exports = class Bot {
           if (user.inJail) {
             if (user.inJail.duration) {
               let timeInJail = Date.now() - user.inJail.duration;
-              let stay = 10*60*1000;
+              let stay = 10 * 60 * 1000;
               if (timeInJail > stay) {
                 user.inJail = undefined;
                 prison.unJail(user);
                 send(resMsg);
               } else {
-                let minutes = Math.floor((stay - timeInJail) / (1000*60));
+                let minutes = Math.floor((stay - timeInJail) / (1000 * 60));
                 let seconds = Math.floor((stay - timeInJail) / 1000) % 60;
                 send("Du måste vänta " + minutes + " min och " + seconds + " sekunder!");
               }
@@ -559,13 +608,13 @@ module.exports = class Bot {
       channel.send(msg)
         .then((message) => {
           setTimeout(() => {
-             message.delete();
-             if (otherMessagesArray !== undefined) {
-               for (let i = 0; i < otherMessagesArray.length; i++) {
-                 otherMessagesArray[i].delete();
-               }
-             }
-           }, duration);
+            message.delete();
+            if (otherMessagesArray !== undefined) {
+              for (let i = 0; i < otherMessagesArray.length; i++) {
+                otherMessagesArray[i].delete();
+              }
+            }
+          }, duration);
         });
     }
 
@@ -576,7 +625,9 @@ module.exports = class Bot {
   async stop() {
     let instance = this;
     client.destroy()
-    .then(() => {instance.lm.log("Bot has been stopped!")})
-    .catch(console.error);
+      .then(() => {
+        instance.lm.log("Bot has been stopped!")
+      })
+      .catch(console.error);
   }
 }
