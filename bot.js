@@ -315,7 +315,7 @@ module.exports = class Bot {
           }, 60000 - ((d.getSeconds()) * 1000));
         }
 
-        setTimeout(() => {
+        setInterval(() => {
           // Update cryptocurrencies
           if (crypto.btc) {
             crypto.btc = false;
