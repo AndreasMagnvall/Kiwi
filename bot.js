@@ -12,8 +12,14 @@ const Collection = require('./collection');
 const CollectionJSON = require('./collectionJSON');
 const WolframModule = require('./wolfram');
 const customText = require('./customText');
-//const cryptoTrack = require("crypto-track");
-const CoinMarketCap = require('coinmarketcap-api');
+const cryptoTrack = require("crypto-track");
+let nf = require('num-format-currency')({
+  suffix: ' SEK',
+  prefix: '',
+  decimalSeparator: ',',
+  decimals: 2,
+  groupSeparator: ' '
+});
 
 /*
   VARIABLES
@@ -67,8 +73,7 @@ module.exports = class Bot {
     language = new Lang('SV');
     l = language.dict;
 
-    //let crypto = new cryptoTrack('SEK', ['bitcoin', 'etherium']);
-    const crypto = new CoinMarketCap();
+    let crypto = new cryptoTrack('SEK');
 
     crypto.btc = true;
 
@@ -315,26 +320,23 @@ module.exports = class Bot {
           }, 60000 - ((d.getSeconds()) * 1000));
         }
 
-        setInterval(() => {
-          // Update cryptocurrencies
-          if (crypto.btc) {
-            crypto.btc = false;
-            crypto.getTicker({
-              convert: 'SEK',
-              currency: 'bitcoin'
-            }).then((data) => {
-              client.user.setGame('BTC: +' + (Number(data[0].percent_change_24h).toFixed(2)) + '%');
-            }).catch(console.log);
-          } else {
-            crypto.btc = true;
-            crypto.getTicker({
-              convert: 'SEK',
-              currency: 'ethereum'
-            }).then((data) => {
-              client.user.setGame('ETH: +' + (Number(data[0].percent_change_24h).toFixed(2)) + '%');
-            }).catch(console.log);
+        crypto.preFetch(6 * 60 * 1000).then(() => {
+          let func = () => {
+            // Update cryptocurrencies
+            let btc = crypto.local.get('bitcoin');
+            let btcP = Number(btc.percent_change_24h).toFixed(2);
+            if (btcP >= 0) btcP = '+' + btcP;
+            let eth = crypto.local.get('ethereum');
+            let ethP = Number(eth.percent_change_24h).toFixed(2);
+            if (ethP >= 0) ethP = '+' + ethP;
+            DEFAULT_CHANNEL.setTopic(
+              'BTC: ' + nf(btc.price_sek) + ' (' + btcP + '%)' +
+              ' | ETH: ' + nf(eth.price_sek) + ' (' + ethP + '%)'
+            );
           }
-        }, 10000);
+          func();
+          setInterval(func, 6 * 60 * 1000);
+        }).catch(console.log);
 
         updateList = function() {
           notify.list = l.notify_header;
