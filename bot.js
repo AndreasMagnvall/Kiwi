@@ -346,7 +346,7 @@ module.exports = class Bot {
           }});
         });
         updateList();
-      });
+      }, true);
     });
 
     client.on('message', message => {
