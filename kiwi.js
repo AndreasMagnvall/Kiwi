@@ -6,6 +6,11 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const LogManager = require('./logManager');
 
+// Unhandeled promises fix
+process.on('unhandledRejection', (reason, p) => {
+  console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+});
+
 let on = false;
 
 let logs = "";
