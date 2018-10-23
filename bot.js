@@ -316,6 +316,7 @@ module.exports = class Bot {
             if (timeAndDateReg.test(timeOrDateAndTime)) {
               let theTime = Date.parse(timeOrDateAndTime);
               d.setTime(theTime);
+            }
             else if (dateReg.test(timeOrDateAndTime)){
             let curTime = new Date().toLocaleTimeString('en-US', { hour12: false,
                                              hour: "numeric",
