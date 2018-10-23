@@ -310,11 +310,19 @@ module.exports = class Bot {
           let now = new Date();
           let timeReg = /\d{1,2}:\d{1,2}/;
           let timeAndDateReg = /\d\d\d\d-\d\d-\d\d \d{1,2}:\d{1,2}/;
+          let dateReg = /\d\d\d\d-\d\d-\d\d/;
           let timeError = l.notify_time_or_date_input_error;
           if (timeOrDateAndTime.length <= 20) {
             if (timeAndDateReg.test(timeOrDateAndTime)) {
               let theTime = Date.parse(timeOrDateAndTime);
               d.setTime(theTime);
+            else if (dateReg.test(timeOrDateAndTime)){
+            let curTime = new Date().toLocaleTimeString('en-US', { hour12: false,
+                                             hour: "numeric",
+                                             minute: "numeric"});
+             let theTime = Date.parse(timeOrDateAndTime);
+             d.setTime(curTime);
+            }
             } else if (timeReg.test(timeOrDateAndTime)) {
               let time = timeOrDateAndTime.split(":");
               d.setHours(time[0]);
