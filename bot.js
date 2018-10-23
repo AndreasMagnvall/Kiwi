@@ -318,11 +318,7 @@ module.exports = class Bot {
               d.setTime(theTime);
             }
             else if (dateReg.test(timeOrDateAndTime)){
-            let curTime = new Date().toLocaleTimeString('en-US', { hour12: false,
-                                             hour: "numeric",
-                                             minute: "numeric"});
-             let theTime = Date.parse(timeOrDateAndTime);
-             d.setTime(curTime);
+              break
             }
             } else if (timeReg.test(timeOrDateAndTime)) {
               let time = timeOrDateAndTime.split(":");
