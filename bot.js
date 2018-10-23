@@ -318,7 +318,7 @@ module.exports = class Bot {
               d.setTime(theTime);
             }
             else if (dateReg.test(timeOrDateAndTime)){
-              break
+              d.setTime(now)
             }
             } else if (timeReg.test(timeOrDateAndTime)) {
               let time = timeOrDateAndTime.split(":");
